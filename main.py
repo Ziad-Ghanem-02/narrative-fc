@@ -11,10 +11,7 @@ from graph import graph
 def main():
 
     question = (
-        "Has the competitive gap between traditional football "
-        "powerhouses and underdog teams decreased in recent FIFA Men's "
-        "World Cups? Support your answer with statistical evidence and "
-        "notable examples."
+        "Has the competitive gap between traditional football powerhouses and underdog teams decreased in recent FIFA Men's World Cups? Support your answer with statistical evidence and notable examples."
     )
 
     initial_state = {
