@@ -17,40 +17,42 @@ class DataAgent:
         }
 
     def parse_queries(self, response):
-
         queries = []
-
         blocks = response.split("###")
 
         for block in blocks:
-
             block = block.strip()
-
             if not block:
                 continue
 
-            purpose = ""
-            sql = ""
-
-            lines = block.splitlines()
-
+            purpose_lines = []
+            sql_lines = []
+            reading_purpose = False
             reading_sql = False
 
-            for line in lines:
-
-                if line.startswith("PURPOSE:"):
-                    purpose = line.replace("PURPOSE:", "").strip()
-
-                elif line.startswith("SQL:"):
+            for line in block.splitlines():
+                stripped_line = line.strip()
+                if stripped_line.startswith("PURPOSE:"):
+                    reading_purpose = True
+                    purpose = stripped_line.removeprefix("PURPOSE:").strip()
+                    if purpose:
+                        purpose_lines.append(purpose)
+                elif stripped_line.startswith("SQL:"):
+                    reading_purpose = False
                     reading_sql = True
-
+                    sql = stripped_line.removeprefix("SQL:").strip()
+                    if sql:
+                        sql_lines.append(sql)
+                elif reading_purpose and stripped_line:
+                    purpose_lines.append(stripped_line)
                 elif reading_sql:
-                    sql += line + "\n"
+                    sql_lines.append(line)
 
-            queries.append({
-                "purpose": purpose,
-                "sql": sql.strip()
-            })
+            if sql_lines:
+                queries.append({
+                    "purpose": " ".join(purpose_lines),
+                    "sql": "\n".join(sql_lines).strip(),
+                })
 
         return queries
 
@@ -145,10 +147,14 @@ END
 
 7. Generate valid PostgreSQL only. Use PostgreSQL-compatible syntax, string literals,
    identifier quoting, functions, and casts.
+
 8. One read-only SELECT or WITH statement per query. A single optional trailing
    semicolon is allowed; do not include multiple statements.
+
 9. `group_standings.advanced` is a `bit varying` column, not text or boolean.
    Test that a team advanced with `gs.advanced = B'1'`.
+
+10. All stage names in matches table are in lowercase. example: 'quarter-finals', 'semi-finals', 'final', 'group stage, round of 16', 'third place match', 'round of 32'.
 
 ==================================================
 READABILITY RULES
@@ -223,22 +229,21 @@ Whenever generating SQL:
 1. Goals Scored
 --------------------------------------------------
 
+For every FIFA Men's World Cup tournament.
 Compare the total number of goals scored by:
 
 - Big Teams
 - Underdog Teams
 
-for every FIFA Men's World Cup tournament.
-
 This data should be suitable for a line chart.
 
+Count goals only from the matches table not the goals table. 
+By getting the home_team_score and away_team_score columns from the matches table.
+And matching the home team and away team against the Big teams and underdogs.
+Then sum the goals scored by each group for every tournament.
+
 When counting goals,
-
-Never SUM(goal_id).
-
-Every row in the goals table represents exactly one goal.
-
-Count goals using COUNT(*).
+Never SUM over any id.
 
 --------------------------------------------------
 2. Quarter-final Representation
@@ -246,8 +251,8 @@ Count goals using COUNT(*).
 
 For every tournament calculate:
 
-- Number of Big Teams reaching the Quarter-finals.
-- Number of Underdog Teams reaching the Quarter-finals.
+- Number of Big Teams reaching the quarter-finals.
+- Number of Underdog Teams reaching the quarter-finals.
 
 Show how this changes over time.
 
@@ -259,8 +264,8 @@ This should produce data suitable for a stacked bar chart.
 
 For every tournament calculate:
 
-- Number of Big Teams reaching the Semi-finals.
-- Number of Underdog Teams reaching the Semi-finals.
+- Number of Big Teams reaching the semi-finals.
+- Number of Underdog Teams reaching the semi-finals.
 
 Show the trend over time.
 
@@ -270,8 +275,8 @@ Show the trend over time.
 
 For every tournament calculate:
 
-- Number of Big Teams reaching the Final.
-- Number of Underdog Teams reaching the Final.
+- Number of Big Teams reaching the final.
+- Number of Underdog Teams reaching the final.
 
 --------------------------------------------------
 5. Famous Upsets
@@ -279,14 +284,13 @@ For every tournament calculate:
 
 Find famous upsets.
 
-Determine the winner using the match score.
-
-Never rely on the "result" column.
+Determine the winner using the home_team_win and away_team_win columns.
 
 The winning team is:
 
 CASE
-WHEN home_team_score > away_team_score THEN home_team
+WHEN home_team_win = 1 AND away_team_win = 0 THEN home_team
+WHEN home_team_win = 0 AND away_team_win = 0 THEN 'Draw'
 ELSE away_team
 END
 
@@ -325,15 +329,7 @@ the percentage of Underdog Teams that qualified for the Knockout Stage.
 Use `gs.advanced = B'1'` to identify teams that qualified.
 
 --------------------------------------------------
-8. Tournament Diversity
---------------------------------------------------
-
-Calculate the number of UNIQUE countries reaching the Quarter-finals in every tournament.
-
-Determine whether diversity increased over time.
-
---------------------------------------------------
-9. Historical Progression
+8. Historical Progression
 --------------------------------------------------
 
 Identify Underdog Teams that consistently improved over multiple tournaments.
@@ -347,7 +343,7 @@ Tournament
 Stage Reached
 
 --------------------------------------------------
-10. Continental Representation
+9. Continental Representation
 --------------------------------------------------
 
 Calculate the number of different confederations represented in the Quarter-finals of every tournament.

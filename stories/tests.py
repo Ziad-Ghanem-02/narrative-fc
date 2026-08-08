@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.test import SimpleTestCase
 from rest_framework.test import APIClient
 
+from story_pipeline.agents.data_agent import DataAgent
 from story_pipeline.agents.visualization_agent import VisualizationAgent
 
 class StoryGenerationViewTests(SimpleTestCase):
@@ -64,5 +65,33 @@ class StoryGenerationViewTests(SimpleTestCase):
                     "columns": ["year", "goals"],
                     "data": [{"year": 2022, "goals": 172}],
                 }
+            ],
+        )
+
+    def test_parses_purpose_on_its_own_line(self):
+        queries = DataAgent({}).parse_queries(
+            """
+            PURPOSE:
+            Goals scored comparison between Big Teams and Underdogs.
+
+            SQL:
+            SELECT 1 AS value;
+            ###
+            PURPOSE: Quarter-final representation
+            SQL: SELECT 2 AS value;
+            """
+        )
+
+        self.assertEqual(
+            queries,
+            [
+                {
+                    "purpose": "Goals scored comparison between Big Teams and Underdogs.",
+                    "sql": "SELECT 1 AS value;",
+                },
+                {
+                    "purpose": "Quarter-final representation",
+                    "sql": "SELECT 2 AS value;",
+                },
             ],
         )
