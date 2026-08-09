@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #040d16;
+  --panel: #0a1722;
+  --panel-2: #0d1d2b;
+  --line: rgba(148, 163, 184, .17);
+  --gold: #efbc42;
+  --gold-2: #ffd66c;
+  --green: #66c860;
+  --muted: #9fb0bd;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #f8fafc;
+  font-family: Arial, Helvetica, sans-serif;
+}
+button, textarea { font: inherit; }
+
+.page-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 72% 10%, rgba(26, 72, 105, .23), transparent 30%),
+    linear-gradient(180deg, #05101a 0%, #040b13 100%);
+}
+
+.container-page { width: min(1180px, calc(100% - 32px)); margin-inline: auto; }
+.panel {
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, rgba(13, 29, 43, .94), rgba(7, 18, 28, .94));
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .24);
+}
+.gold-button {
+  border: 0;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #e5ad2d, #f3c852);
+  color: #111827;
+  font-weight: 800;
+  letter-spacing: .02em;
+  cursor: pointer;
+  transition: transform .2s ease, filter .2s ease;
+}
+.gold-button:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.section-kicker { color: var(--gold); letter-spacing: .18em; font-size: .72rem; font-weight: 800; }
+.title-line { width: 48px; height: 2px; background: var(--gold); margin: 12px auto 0; }
+
+.stadium-bg {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 74% 8%, rgba(255,255,255,.88) 0 2px, transparent 3px),
+    radial-gradient(circle at 80% 12%, rgba(255,255,255,.55) 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 19%, rgba(255,255,255,.55) 0 1px, transparent 2px),
+    linear-gradient(180deg, rgba(2,9,15,.20), rgba(2,9,15,.78)),
+    radial-gradient(ellipse at 50% 100%, #19472d 0%, #0b2d20 31%, #07131c 72%);
+}
+.stadium-bg::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(112deg, transparent 0 54%, rgba(255,255,255,.08) 56%, transparent 62%);
+}
+.football {
+  width: clamp(120px, 19vw, 220px); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #fff 0 8%, #d8d8d8 30%, #909090 72%, #383838 100%);
+  box-shadow: 0 24px 55px rgba(0,0,0,.48), inset -25px -20px 35px rgba(0,0,0,.38);
+  position: relative;
+}
+.football::before { content:"◆"; position:absolute; inset:0; display:grid; place-items:center; color:#18202a; font-size:clamp(42px,7vw,78px); transform:rotate(18deg); }
+.trophy {
+  width: clamp(80px, 11vw, 132px); height: clamp(155px, 20vw, 240px); position: relative;
+  filter: drop-shadow(0 16px 22px rgba(0,0,0,.38));
+}
+.trophy::before { content:""; position:absolute; width:72%; height:58%; left:14%; top:0; border-radius:48% 48% 34% 34%; background:linear-gradient(110deg,#76500d,#ffd76d 34%,#b57b16 64%,#f1c74d); }
+.trophy::after { content:""; position:absolute; left:38%; top:48%; width:24%; height:46%; background:linear-gradient(90deg,#8f6012,#f7d068,#9f6b14); clip-path:polygon(25% 0,75% 0,70% 65%,100% 100%,0 100%,30% 65%); }
+
+.map-tooltip { position:absolute; z-index:10; pointer-events:none; right:18px; top:18px; padding:12px 14px; min-width:170px; }
+.recharts-cartesian-axis-tick-value { fill: #94a3b8; font-size: 11px; }
+.recharts-legend-item-text { color: #cbd5e1 !important; font-size: 11px; }
+
+@media (max-width: 760px) {
+  .container-page { width: min(100% - 20px, 1180px); }
+  .map-tooltip { position: static; margin: 10px; }
+}
