@@ -8,8 +8,9 @@ from rest_framework.views import APIView
 from story_pipeline.agents.story_rewriter import StoryRewriter
 from story_pipeline.graph import run_story
 from story_pipeline.world_cup import load_map_summary
-from stories.models import StoryGeneration, StoryRevision
+from stories.models import StoryGeneration, StoryGenerationJob, StoryRevision
 from stories.serializers import StoryRequestSerializer, StoryRevisionRequestSerializer
+from stories.services import persist_story
 
 
 def story_response(story_generation: StoryGeneration) -> dict:
@@ -33,16 +34,7 @@ class StoryGenerationView(APIView):
         serializer.is_valid(raise_exception=True)
 
         final_state = run_story(serializer.validated_data["question"])
-        story_generation = StoryGeneration.objects.create(
-            question=final_state["question"],
-            queries=final_state["queries"],
-            results=final_state["results"],
-            evidence=final_state["evidence"],
-            plan=final_state["plan"],
-            original_story=final_state["story"],
-            current_story=final_state["story"],
-            charts=final_state["charts"],
-        )
+        story_generation = persist_story(final_state)
         return Response(
             story_response(story_generation),
             status=status.HTTP_201_CREATED,
@@ -52,6 +44,42 @@ class StoryGenerationView(APIView):
 class WorldCupMapSummaryView(APIView):
     def get(self, request):
         return Response({"countries": load_map_summary()})
+
+
+class StoryGenerationJobView(APIView):
+    def post(self, request):
+        serializer = StoryRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        job = StoryGenerationJob.objects.create(
+            question=serializer.validated_data["question"],
+        )
+        return Response(
+            {
+                "id": job.id,
+                "status": job.status,
+                "created_at": job.created_at,
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class StoryGenerationJobDetailView(APIView):
+    def get(self, request, job_id):
+        job = get_object_or_404(StoryGenerationJob, pk=job_id)
+        response = {
+            "id": job.id,
+            "status": job.status,
+            "created_at": job.created_at,
+            "started_at": job.started_at,
+            "completed_at": job.completed_at,
+        }
+        if job.status == StoryGenerationJob.Status.SUCCEEDED:
+            response["story"] = story_response(job.story_generation)
+        elif job.status == StoryGenerationJob.Status.FAILED:
+            response["detail"] = "Story generation failed. Please try again."
+
+        return Response(response)
 
 
 class StoryDetailView(APIView):

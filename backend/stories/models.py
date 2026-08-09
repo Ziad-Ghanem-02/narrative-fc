@@ -17,6 +17,33 @@ class StoryGeneration(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class StoryGenerationJob(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        PROCESSING = "processing", "Processing"
+        SUCCEEDED = "succeeded", "Succeeded"
+        FAILED = "failed", "Failed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    question = models.TextField()
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.QUEUED,
+    )
+    story_generation = models.OneToOneField(
+        StoryGeneration,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="generation_job",
+    )
+    error_message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+
 class StoryRevision(models.Model):
     story_generation = models.ForeignKey(
         StoryGeneration,

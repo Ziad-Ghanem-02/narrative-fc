@@ -12,7 +12,8 @@ from story_pipeline.graph import create_graph
 from story_pipeline.serialization import to_json_value
 from story_pipeline.story_links import retain_valid_chart_markers
 from story_pipeline.world_cup import load_map_summary
-from stories.models import StoryGeneration, StoryRevision
+from stories.models import StoryGeneration, StoryGenerationJob, StoryRevision
+from stories.services import process_next_story_job
 
 
 class StoryGenerationViewTests(TestCase):
@@ -105,6 +106,73 @@ class StoryGenerationViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("question", response.data)
+
+    def test_queues_story_generation_job(self):
+        response = self.client.post(
+            "/api/story-jobs/",
+            {"question": "Did underdogs close the gap?"},
+            format="json",
+        )
+
+        job = StoryGenerationJob.objects.get()
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(response.data["id"], job.id)
+        self.assertEqual(job.status, StoryGenerationJob.Status.QUEUED)
+
+    @patch("stories.services.run_story")
+    def test_worker_persists_story_and_marks_job_succeeded(self, run_story):
+        job = StoryGenerationJob.objects.create(
+            question="Did underdogs close the gap?",
+        )
+        run_story.return_value = {
+            "question": job.question,
+            "queries": [],
+            "results": [],
+            "evidence": "Evidence",
+            "plan": "Plan",
+            "story": "Story",
+            "charts": [],
+        }
+
+        self.assertTrue(process_next_story_job())
+
+        job.refresh_from_db()
+        self.assertEqual(job.status, StoryGenerationJob.Status.SUCCEEDED)
+        self.assertEqual(job.story_generation.current_story, "Story")
+        run_story.assert_called_once_with(job.question)
+
+    @patch("stories.services.run_story", side_effect=RuntimeError("LLM unavailable"))
+    def test_worker_marks_failed_job_without_losing_it(self, _run_story):
+        job = StoryGenerationJob.objects.create(question="Test question")
+
+        self.assertTrue(process_next_story_job())
+
+        job.refresh_from_db()
+        self.assertEqual(job.status, StoryGenerationJob.Status.FAILED)
+        self.assertIn("LLM unavailable", job.error_message)
+
+    def test_returns_succeeded_job_story(self):
+        story_generation = StoryGeneration.objects.create(
+            question="Did underdogs close the gap?",
+            queries=[],
+            results=[],
+            evidence="Evidence",
+            plan="Plan",
+            original_story="Story",
+            current_story="Story",
+            charts=[],
+        )
+        job = StoryGenerationJob.objects.create(
+            question=story_generation.question,
+            status=StoryGenerationJob.Status.SUCCEEDED,
+            story_generation=story_generation,
+        )
+
+        response = self.client.get(f"/api/story-jobs/{job.id}/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], StoryGenerationJob.Status.SUCCEEDED)
+        self.assertEqual(response.data["story"]["id"], story_generation.id)
 
     def test_rewrites_story_and_persists_revision(self):
         story_generation = StoryGeneration.objects.create(

@@ -44,17 +44,22 @@ Install the dependencies:
 python -m pip install -r requirements.txt
 ```
 
-Run Django:
+Run Django and the story-generation worker in separate terminals:
 
 ```powershell
 python manage.py runserver
+```
+
+```powershell
+python manage.py process_story_jobs
 ```
 
 The API is available at `http://127.0.0.1:8000`.
 
 ## Generate a story
 
-Send a `POST` request to `/api/stories/` with a research question:
+Send a `POST` request to `/api/story-jobs/` with a research question. It returns
+immediately with a job ID while the worker runs the LLM pipeline:
 
 ```powershell
 $body = @{
@@ -63,17 +68,27 @@ $body = @{
 
 Invoke-RestMethod `
     -Method Post `
-    -Uri "http://127.0.0.1:8000/api/stories/" `
+    -Uri "http://127.0.0.1:8000/api/story-jobs/" `
     -ContentType "application/json" `
     -Body $body
 ```
 
-The response contains the generated SQL queries, query results, evidence report,
+Poll `GET /api/story-jobs/JOB_ID/` until `status` is `succeeded`. Its `story` field
+then contains the generated SQL queries, query results, evidence report,
 story plan, final story, and frontend-ready Recharts specifications. No chart images
 or executable frontend code are generated or stored on the server.
 
 ```json
 {
+  "id": "job-uuid",
+  "status": "succeeded",
+  "story": {"id": "story-uuid"}
+}
+```
+
+```json
+{
+  "id": "story-uuid",
   "question": "Has the competitive gap decreased?",
   "queries": [{"purpose": "Goals scored comparison", "sql": "SELECT ..."}],
   "results": [{
@@ -127,9 +142,9 @@ Markers that do not reference a returned chart are removed by the backend.
 
 ## Revise a saved story
 
-Each generated story is persisted in PostgreSQL. The generation response includes
-its `id`. Submit a user instruction to create a new revision from the saved
-evidence and latest story:
+Each generated story is persisted in PostgreSQL. Use the `story.id` returned by a
+succeeded generation job when submitting a revision from the saved evidence and
+latest story:
 
 ```powershell
 $body = @{
@@ -152,14 +167,17 @@ GET /api/stories/STORY_ID/
 
 ## Deploy to Render or Railway
 
-Both platforms detect the included `Procfile` and start the service with Gunicorn.
+Both platforms use the included `Procfile`: the `web` process serves Django and the
+`worker` process executes queued story-generation jobs.
 
 1. Push the repository to GitHub.
 2. Create a new **Web Service** on Render, or a new **Service** on Railway, from
    that repository.
 3. Set the build command to `pip install -r requirements.txt`.
-4. Set the start command to `gunicorn config.wsgi:application`.
-5. Configure these environment variables in the platform dashboard:
+4. Set the web start command to `gunicorn config.wsgi:application`.
+5. Create a separate worker service from the same repository with start command
+   `python manage.py process_story_jobs`.
+6. Configure these environment variables in both services:
 
    ```env
    DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
@@ -174,7 +192,10 @@ Both platforms detect the included `Procfile` and start the service with Gunicor
    you can alternatively create the service from `render.yaml`; set
    `DJANGO_ALLOWED_HOSTS` to its generated public hostname after the first deploy.
 
-6. Deploy, then send requests to `https://YOUR-DOMAIN/api/stories/`.
+   Render can create both services from `render.yaml`. On Railway, create the
+   separate worker service manually.
+
+7. Deploy, then submit jobs to `https://YOUR-DOMAIN/api/story-jobs/`.
 
 ## Database migrations and tests
 
