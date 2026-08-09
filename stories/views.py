@@ -79,6 +79,7 @@ class StoryRevisionView(APIView):
             question=story_generation.question,
             evidence=story_generation.evidence,
             story=story_generation.current_story,
+            charts=story_generation.charts,
             instruction=serializer.validated_data["instruction"],
         )
         revision_number = (

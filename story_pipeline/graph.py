@@ -24,18 +24,18 @@ def create_graph():
 
     builder.add_node("writer", StoryWriter())
 
-    # builder.add_node("visualizer", VisualizationAgent())
+    builder.add_node("visualizer", VisualizationAgent())
 
     builder.add_edge("data", "evidence")
 
     builder.add_edge("evidence", "planner")
 
-    # builder.add_edge("evidence", "visualizer")
+    builder.add_edge("evidence", "visualizer")
 
     builder.add_edge("planner", "writer")
+    builder.add_edge("visualizer", "writer")
 
     builder.add_edge("writer", END)
-    # builder.add_edge("visualizer", END)
     builder.set_entry_point("data")
     return builder.compile()
 

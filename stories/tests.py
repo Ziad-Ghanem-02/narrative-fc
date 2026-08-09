@@ -7,7 +7,10 @@ from rest_framework.test import APIClient
 from story_pipeline.agents.data_agent import DataAgent
 from story_pipeline.agents.evidence_builder import EvidenceBuilder
 from story_pipeline.agents.visualization_agent import VisualizationAgent
+from story_pipeline.charts import build_chart_specs
+from story_pipeline.graph import create_graph
 from story_pipeline.serialization import to_json_value
+from story_pipeline.story_links import retain_valid_chart_markers
 from stories.models import StoryGeneration, StoryRevision
 
 
@@ -81,6 +84,7 @@ class StoryGenerationViewTests(TestCase):
             question=story_generation.question,
             evidence=story_generation.evidence,
             story="The original story.",
+            charts=[],
             instruction="Make the story more optimistic.",
         )
 
@@ -119,7 +123,25 @@ class StoryGenerationViewTests(TestCase):
             [{"average_goal_difference": 1.75}],
         )
 
-    def test_returns_chart_data_without_creating_files(self):
+    @patch("story_pipeline.agents.visualization_agent.ask_llm")
+    def test_returns_validated_recharts_specification(self, ask_llm):
+        ask_llm.return_value = """
+        [
+          {
+            "type": "line",
+            "title": "Goals by tournament",
+            "description": "A comparison over time.",
+            "x_axis": {"data_key": "year", "label": "World Cup year"},
+            "series": [
+              {
+                "data_key": "goals",
+                "label": "Goals",
+                "color": "#2563eb"
+              }
+            ]
+          }
+        ]
+        """
         result = VisualizationAgent()(
             {
                 "results": [
@@ -133,14 +155,67 @@ class StoryGenerationViewTests(TestCase):
         )
 
         self.assertEqual(
-            result["charts"],
+            result["charts"][0],
+            {
+                "id": "chart-1-goals-scored-comparison",
+                "type": "line",
+                "title": "Goals by tournament",
+                "description": "A comparison over time.",
+                "x_axis": {"data_key": "year", "label": "World Cup year"},
+                "series": [
+                    {
+                        "data_key": "goals",
+                        "label": "Goals",
+                        "color": "#2563eb",
+                    }
+                ],
+                "data": [{"year": 2022, "goals": 172}],
+            },
+        )
+
+    def test_falls_back_for_invalid_chart_specification(self):
+        charts = build_chart_specs(
             [
                 {
-                    "title": "Goals scored comparison",
+                    "purpose": "Goals scored comparison",
                     "columns": ["year", "goals"],
                     "data": [{"year": 2022, "goals": 172}],
                 }
             ],
+            [
+                {
+                    "type": "pie",
+                    "title": "Invalid",
+                    "description": "",
+                    "x_axis": {"data_key": "year", "label": "Year"},
+                    "series": [],
+                }
+            ],
+        )
+
+        self.assertEqual(charts[0]["type"], "line")
+        self.assertEqual(charts[0]["series"][0]["data_key"], "goals")
+
+    def test_removes_unknown_chart_links_from_story(self):
+        story = (
+            "A valid claim. [chart:chart-1-goals] "
+            "An invalid claim. [chart:not-returned]"
+        )
+
+        self.assertEqual(
+            retain_valid_chart_markers(story, [{"id": "chart-1-goals"}]),
+            "A valid claim. [chart:chart-1-goals] An invalid claim.",
+        )
+
+    @patch("story_pipeline.graph.load_schema", return_value={})
+    def test_waits_for_charts_before_writing_story(self, _load_schema):
+        graph = create_graph()
+
+        self.assertTrue(
+            any(
+                edge.source == "visualizer" and edge.target == "writer"
+                for edge in graph.get_graph().edges
+            )
         )
 
     def test_parses_purpose_on_its_own_line(self):
