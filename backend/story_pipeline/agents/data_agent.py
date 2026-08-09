@@ -194,16 +194,26 @@ Determine what evidence would convince someone that the competitive gap has beco
 
 Collect evidence from MULTIPLE independent perspectives.
 
-Your SQL queries should be suitable for visualizations such as:
+Your SQL queries must, TOGETHER AS A SET, produce result shapes suitable for a
+DIVERSE mix of visualizations. Do NOT let every query produce a "tournament by
+year" time series. Aim for this spread across the whole set:
 
-- Line Charts
-- Bar Charts
-- Timeline Charts
-- Scatter Plots
+- Line / Area Charts — trends over tournaments (time on the x-axis).
+- Bar / Stacked Bar / Horizontal Bar Charts — comparisons and rankings.
+- Pie Charts — a single snapshot broken into a small number of categories
+  (for example: the share/composition of something in the latest tournament,
+  or across all tournaments combined), 3-7 categories, 1 numeric measure.
+- Scatter Plots — the relationship between exactly TWO numeric metrics, with
+  one row per team or per team-tournament (no time axis).
+- Radar Charts — a multi-metric profile comparing a handful (4-8) of teams
+  across at least 3 different numeric metrics in the same row.
 
 Generate BETWEEN 7 AND 10 SQL queries.
 
-Each query MUST investigate a different research dimension.
+Each query MUST investigate a different research dimension, AND the queries
+must collectively cover EVERY chart shape above at least once. Do not skip the
+pie, scatter, or radar shapes just because a time-series query is easier to
+write.
 
 ==================================================
 REQUIRED RESEARCH DIMENSIONS
@@ -343,10 +353,58 @@ Tournament
 Stage Reached
 
 --------------------------------------------------
-9. Continental Representation
+9. Confederation Composition Snapshot (PIE CHART)
 --------------------------------------------------
 
-Calculate the number of different confederations represented in the Quarter-finals of every tournament.
+Pick ONE recent FIFA Men's World Cup tournament (the most recent one available,
+unless the research question asks about a different period).
+
+For that single tournament, calculate how many Quarter-final (or Round of 16,
+if Quarter-finals produce too few rows) spots were held by each confederation.
+
+Return exactly:
+
+- Confederation
+- Number of teams
+
+This result must have ONLY 2 columns, one categorical (confederation) and one
+numeric (count), with 3-7 rows. Do NOT include a year/tournament column here —
+this is a single-tournament snapshot suited for a pie chart, not a trend.
+
+--------------------------------------------------
+10. Team Performance Relationship (SCATTER PLOT)
+--------------------------------------------------
+
+For every team that has played at least 4 matches across all FIFA Men's World
+Cup tournaments, calculate:
+
+- Team Name
+- Win rate (percentage of matches won)
+- Average goal difference (using ABS(home_team_score - away_team_score) from
+  the matches table, as defined above)
+
+Return ONE row per team. Do NOT include a year or tournament column. This
+result has exactly one categorical column and two independent numeric metrics,
+so it can be plotted as a scatter plot of win rate versus goal difference.
+
+--------------------------------------------------
+11. Underdog Multi-Metric Profile (RADAR CHART)
+--------------------------------------------------
+
+Select the 4 to 6 Underdog Teams with the most quarter-final (or better)
+appearances across all FIFA Men's World Cup tournaments.
+
+For each of these teams, calculate in ONE row:
+
+- Team Name
+- Total goals scored
+- Total wins
+- Total quarter-final (or better) appearances
+- Average goal difference in matches against Big Teams
+
+This result must have ONE row per team and AT LEAST 3 numeric columns besides
+the team name, so it can be plotted as a radar chart comparing several metrics
+per team. Do NOT include a year/tournament column.
 
 ==================================================
 QUALITY REQUIREMENTS
@@ -362,11 +420,11 @@ Each query should investigate a DIFFERENT aspect of competitiveness.
 
 Every SQL query should produce results suitable for visualization.
 
-Prefer:
-
-- Line Charts
-- Bar Charts
-- Timeline Charts
+Ensure the FULL SET of queries supports a diverse mix of chart shapes:
+time trends (line/area), comparisons and rankings (bar/stacked/horizontal
+bar), a single-snapshot composition (pie), a two-metric relationship
+(scatter), and a multi-metric team profile (radar). Do NOT make every query
+a year-by-year time series.
 
 Avoid returning a single number whenever possible.
 
@@ -418,6 +476,9 @@ Rules:
 
 - Return between 7 and 10 SQL queries.
 - Every query must have a different PURPOSE.
+- The set of queries MUST include the pie-friendly confederation snapshot,
+  the scatter-friendly team performance relationship, and the radar-friendly
+  underdog multi-metric profile described above.
 - Separate every query using ###.
 - Do NOT return JSON.
 - Do NOT explain anything.

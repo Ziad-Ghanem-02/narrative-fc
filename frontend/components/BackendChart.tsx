@@ -63,44 +63,45 @@ export function BackendChart({ chart }: BackendChartProps) {
     stroke: "#94a3b8",
     tick: { fill: "#cbd5e1", fontSize: 11 },
   };
-  const sharedAxes = (
-    <>
-      <CartesianGrid stroke="#18303f" strokeDasharray="3 4" vertical={false} />
-      <XAxis
-        {...axisProps}
-        dataKey={chart.x_axis.data_key}
-        height={44}
-        label={{
-          value: chart.x_axis.label,
-          fill: "#94a3b8",
-          fontSize: 11,
-          position: "insideBottom",
-          offset: -4,
-        }}
-      />
-      <YAxis
-        {...axisProps}
-        tickFormatter={(value) => formatValue(value, yAxis.format)}
-        width={52}
-        label={{
-          value: yAxis.label,
-          fill: "#94a3b8",
-          fontSize: 11,
-          angle: -90,
-          position: "insideLeft",
-          offset: 10,
-        }}
-      />
-      <Tooltip
-        contentStyle={tooltipStyle}
-        formatter={(value: string | number, name: string) => [
-          formatValue(value, yAxis.format),
-          name,
-        ]}
-      />
-      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-    </>
-  );
+  const sharedAxes = [
+    <CartesianGrid key="grid" stroke="#18303f" strokeDasharray="3 4" vertical={false} />,
+    <XAxis
+      {...axisProps}
+      dataKey={chart.x_axis.data_key}
+      height={44}
+      key="x-axis"
+      label={{
+        value: chart.x_axis.label,
+        fill: "#94a3b8",
+        fontSize: 11,
+        position: "insideBottom",
+        offset: -4,
+      }}
+    />,
+    <YAxis
+      {...axisProps}
+      key="y-axis"
+      tickFormatter={(value) => formatValue(value, yAxis.format)}
+      width={52}
+      label={{
+        value: yAxis.label,
+        fill: "#94a3b8",
+        fontSize: 11,
+        angle: -90,
+        position: "insideLeft",
+        offset: 10,
+      }}
+    />,
+    <Tooltip
+      contentStyle={tooltipStyle}
+      formatter={(value: string | number, name: string) => [
+        formatValue(value, yAxis.format),
+        name,
+      ]}
+      key="tooltip"
+    />,
+    <Legend key="legend" wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />,
+  ];
 
   if (chart.type === "table") {
     return (
