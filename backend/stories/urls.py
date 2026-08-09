@@ -1,9 +1,19 @@
 from django.urls import path
 
-from stories.views import StoryDetailView, StoryGenerationView, StoryRevisionView
+from stories.views import (
+    StoryDetailView,
+    StoryGenerationView,
+    StoryRevisionView,
+    WorldCupMapSummaryView,
+)
 
 
 urlpatterns = [
+    path(
+        "world-cup/map-summary/",
+        WorldCupMapSummaryView.as_view(),
+        name="world-cup-map-summary",
+    ),
     path("stories/", StoryGenerationView.as_view(), name="story-generation"),
     path("stories/<uuid:story_id>/", StoryDetailView.as_view(), name="story-detail"),
     path(

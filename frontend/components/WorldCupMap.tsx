@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -8,12 +8,28 @@ import {
 } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 
-import {
-  worldCupStats,
-  type CountryStats,
-} from "@/lib/worldCupData";
-
 const geoUrl = "/world-countries.json";
+
+interface CountryStats {
+  name: string;
+  wins: number;
+  draws: number;
+  losses: number;
+  matches: number;
+  peak_stage: string;
+  confederation: string;
+}
+
+interface MapSummaryResponse {
+  countries: CountryStats[];
+}
+
+const countryNameAliases: Record<string, string> = {
+  "United States of America": "United States",
+  Czechia: "Czech Republic",
+  "Bosnia and Herz.": "Bosnia and Herzegovina",
+  "Dem. Rep. Congo": "DR Congo",
+};
 
 const colorScale = scaleLinear<string>()
   .domain([0, 10, 40, 75])
@@ -25,13 +41,37 @@ const emptyCountry = (name: string): CountryStats => ({
   draws: 0,
   losses: 0,
   matches: 0,
-  peakStage: "Did not qualify",
-  confed: "N/A",
+  peak_stage: "Did not qualify",
+  confederation: "N/A",
 });
 
 export default function WorldCupMap() {
   const [hoveredCountry, setHoveredCountry] =
     useState<CountryStats | null>(null);
+  const [countries, setCountries] = useState<Record<string, CountryStats>>({});
+  const [mapDataError, setMapDataError] = useState(false);
+
+  useEffect(() => {
+    async function loadMapSummary() {
+      try {
+        const response = await fetch("/api/world-cup/map-summary/");
+        if (!response.ok) {
+          throw new Error("Map summary request failed.");
+        }
+
+        const { countries: summary } = (await response.json()) as MapSummaryResponse;
+        setCountries(
+          Object.fromEntries(
+            summary.map((country) => [country.name, country]),
+          ),
+        );
+      } catch {
+        setMapDataError(true);
+      }
+    }
+
+    void loadMapSummary();
+  }, []);
 
   return (
     <section className="grid w-full grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
@@ -51,7 +91,8 @@ export default function WorldCupMap() {
                   geo.properties?.ADMIN ||
                   "Unlisted Country";
 
-                const matchedData = worldCupStats[countryName];
+                const matchedData =
+                  countries[countryNameAliases[countryName] ?? countryName];
                 const wins = matchedData?.wins ?? 0;
 
                 return (
@@ -121,7 +162,10 @@ export default function WorldCupMap() {
                 </h3>
 
                 <p className="mt-1 text-xs font-medium text-slate-400">
-                  Confederation: {hoveredCountry.confed}
+                  Confederation: {hoveredCountry.confederation}
+                </p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Historical totals across FIFA Men&apos;s World Cups
                 </p>
               </div>
 
@@ -131,7 +175,7 @@ export default function WorldCupMap() {
                 </p>
 
                 <p className="mt-1 font-bold text-[#efbc42]">
-                  {hoveredCountry.peakStage}
+                  {hoveredCountry.peak_stage}
                 </p>
               </div>
 
@@ -209,7 +253,9 @@ export default function WorldCupMap() {
         </div>
 
         <p className="mt-6 border-t border-[#1b3548] pt-4 text-xs text-slate-500">
-          Source: Fjelstul World Cup Database
+          {mapDataError
+            ? "Live database data is unavailable"
+            : "Source: Neon World Cup database"}
         </p>
       </aside>
     </section>

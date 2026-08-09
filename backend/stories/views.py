@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from story_pipeline.agents.story_rewriter import StoryRewriter
 from story_pipeline.graph import run_story
+from story_pipeline.world_cup import load_map_summary
 from stories.models import StoryGeneration, StoryRevision
 from stories.serializers import StoryRequestSerializer, StoryRevisionRequestSerializer
 
@@ -46,6 +47,11 @@ class StoryGenerationView(APIView):
             story_response(story_generation),
             status=status.HTTP_201_CREATED,
         )
+
+
+class WorldCupMapSummaryView(APIView):
+    def get(self, request):
+        return Response({"countries": load_map_summary()})
 
 
 class StoryDetailView(APIView):

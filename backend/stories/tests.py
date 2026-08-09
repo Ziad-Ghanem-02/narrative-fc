@@ -11,6 +11,7 @@ from story_pipeline.charts import build_chart_specs
 from story_pipeline.graph import create_graph
 from story_pipeline.serialization import to_json_value
 from story_pipeline.story_links import retain_valid_chart_markers
+from story_pipeline.world_cup import load_map_summary
 from stories.models import StoryGeneration, StoryRevision
 
 
@@ -46,6 +47,58 @@ class StoryGenerationViewTests(TestCase):
         self.assertEqual(response.data["story"], "Story")
         self.assertEqual(StoryGeneration.objects.count(), 1)
         run_story.assert_called_once_with("Did underdogs close the gap?")
+
+    @patch("stories.views.load_map_summary")
+    def test_returns_live_map_summary(self, load_map_summary):
+        load_map_summary.return_value = [
+            {
+                "name": "Brazil",
+                "wins": 76,
+                "draws": 19,
+                "losses": 19,
+                "matches": 114,
+                "peak_stage": "Champions",
+                "confederation": "CONMEBOL",
+            }
+        ]
+
+        response = self.client.get("/api/world-cup/map-summary/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["countries"], load_map_summary.return_value)
+
+    @patch("story_pipeline.world_cup.run_query_with_columns")
+    def test_load_map_summary_returns_json_ready_country_stats(
+        self,
+        run_query_with_columns,
+    ):
+        run_query_with_columns.return_value = (
+            [
+                "name",
+                "wins",
+                "draws",
+                "losses",
+                "matches",
+                "peak_stage",
+                "confederation",
+            ],
+            [("Egypt", 2, 2, 1, 5, "Round of 16", "CAF")],
+        )
+
+        self.assertEqual(
+            load_map_summary(),
+            [
+                {
+                    "name": "Egypt",
+                    "wins": 2,
+                    "draws": 2,
+                    "losses": 1,
+                    "matches": 5,
+                    "peak_stage": "Round of 16",
+                    "confederation": "CAF",
+                }
+            ],
+        )
 
     def test_rejects_missing_question(self):
         response = self.client.post("/api/stories/", {}, format="json")
