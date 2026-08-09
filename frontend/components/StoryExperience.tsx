@@ -126,28 +126,22 @@ export function StoryExperience() {
         {error && <p className="mt-3 text-sm text-rose-300">{error}</p>}
       </form>
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-2">
-        <article className="panel p-6 md:p-8">
-          <h2 className="text-center text-sm font-bold uppercase tracking-[.18em] text-[#efbc42]">
-            Story A · Agentic
-          </h2>
-          {story ? (
-            <>
-              <p className="mt-3 text-center text-xs text-slate-500">
-                Persisted story ID: {story.id}
-              </p>
-              <div className="mt-6">
-                <AgenticStory charts={story.charts} story={story.story} />
-              </div>
-            </>
-          ) : (
-            <p className="mt-6 text-center text-sm leading-7 text-slate-400">
-              Generate Story A to see the agentic narrative and its data-backed
-              visualizations.
-            </p>
-          )}
-        </article>
+      {story ? (
+        <div className="mt-8">
+          <AgenticStory
+            charts={story.charts}
+            story={story.story}
+            storyId={story.id}
+          />
+        </div>
+      ) : (
+        <section className="panel mt-8 p-6 text-center text-sm leading-7 text-slate-400">
+          Generate Story A to see the agentic narrative and its data-backed
+          visualizations.
+        </section>
+      )}
 
+      <section className="mt-5">
         <article className="panel p-6 md:p-8">
           <h2 className="text-center text-sm font-bold uppercase tracking-[.18em] text-[#efbc42]">
             Story B · Human

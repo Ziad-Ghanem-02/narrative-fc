@@ -1,9 +1,20 @@
-export type ChartType = "line" | "bar" | "stacked_bar" | "scatter" | "table";
+export type ChartType =
+  | "area"
+  | "bar"
+  | "composed"
+  | "horizontal_bar"
+  | "line"
+  | "pie"
+  | "radar"
+  | "scatter"
+  | "stacked_bar"
+  | "table";
 
 export interface ChartSeries {
   data_key: string;
   label: string;
   color: string;
+  render_as?: "area" | "bar" | "line";
 }
 
 export interface ChartSpec {
@@ -14,6 +25,10 @@ export interface ChartSpec {
   x_axis: {
     data_key: string;
     label: string;
+  };
+  y_axis?: {
+    label: string;
+    format: "number" | "percentage";
   };
   series: ChartSeries[];
   data: Array<Record<string, string | number | null>>;

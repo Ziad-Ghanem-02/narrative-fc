@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from story_pipeline.agents.story_rewriter import StoryRewriter
 from story_pipeline.graph import run_story
+from story_pipeline.story_links import retain_valid_chart_markers
 from story_pipeline.world_cup import load_map_summary
 from stories.models import StoryGeneration, StoryGenerationJob, StoryRevision
 from stories.serializers import StoryRequestSerializer, StoryRevisionRequestSerializer
@@ -21,7 +22,10 @@ def story_response(story_generation: StoryGeneration) -> dict:
         "results": story_generation.results,
         "evidence": story_generation.evidence,
         "plan": story_generation.plan,
-        "story": story_generation.current_story,
+        "story": retain_valid_chart_markers(
+            story_generation.current_story,
+            story_generation.charts,
+        ),
         "charts": story_generation.charts,
         "created_at": story_generation.created_at,
         "updated_at": story_generation.updated_at,

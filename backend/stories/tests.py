@@ -253,11 +253,12 @@ class StoryGenerationViewTests(TestCase):
             "title": "Goals by tournament",
             "description": "A comparison over time.",
             "x_axis": {"data_key": "year", "label": "World Cup year"},
+            "y_axis": {"label": "Goals", "format": "number"},
             "series": [
               {
                 "data_key": "goals",
                 "label": "Goals",
-                "color": "#2563eb"
+                "render_as": "line"
               }
             ]
           }
@@ -278,16 +279,18 @@ class StoryGenerationViewTests(TestCase):
         self.assertEqual(
             result["charts"][0],
             {
-                "id": "chart-1-goals-scored-comparison",
+                "id": "chart-1",
                 "type": "line",
                 "title": "Goals by tournament",
                 "description": "A comparison over time.",
                 "x_axis": {"data_key": "year", "label": "World Cup year"},
+                "y_axis": {"label": "Goals", "format": "number"},
                 "series": [
                     {
                         "data_key": "goals",
                         "label": "Goals",
-                        "color": "#2563eb",
+                        "color": "#EAB308",
+                        "render_as": "line",
                     }
                 ],
                 "data": [{"year": 2022, "goals": 172}],
@@ -309,6 +312,7 @@ class StoryGenerationViewTests(TestCase):
                     "title": "Invalid",
                     "description": "",
                     "x_axis": {"data_key": "year", "label": "Year"},
+                    "y_axis": {"label": "Value", "format": "number"},
                     "series": [],
                 }
             ],
@@ -326,6 +330,15 @@ class StoryGenerationViewTests(TestCase):
         self.assertEqual(
             retain_valid_chart_markers(story, [{"id": "chart-1-goals"}]),
             "A valid claim. [chart:chart-1-goals] An invalid claim.",
+        )
+
+    def test_normalizes_legacy_chart_links_from_existing_stories(self):
+        self.assertEqual(
+            retain_valid_chart_markers(
+                "A valid claim. [chart-1-legacy-purpose]",
+                [{"id": "chart-1-legacy-purpose"}],
+            ),
+            "A valid claim. [chart:chart-1-legacy-purpose]",
         )
 
     @patch("story_pipeline.graph.load_schema", return_value={})
