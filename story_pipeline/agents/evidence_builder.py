@@ -1,5 +1,6 @@
 from story_pipeline.database import run_query_with_columns
 from story_pipeline.llm import ask_llm
+from story_pipeline.serialization import to_json_value
 
 class EvidenceBuilder:
 
@@ -15,7 +16,10 @@ class EvidenceBuilder:
                 "purpose": query["purpose"],
                 "sql": query["sql"],
                 "columns": columns,
-                "data": [dict(zip(columns, row)) for row in rows],
+                "data": [
+                    to_json_value(dict(zip(columns, row)))
+                    for row in rows
+                ],
             })
 
         evidence = self.build(

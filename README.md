@@ -93,6 +93,31 @@ or stored on the server.
 }
 ```
 
+## Revise a saved story
+
+Each generated story is persisted in PostgreSQL. The generation response includes
+its `id`. Submit a user instruction to create a new revision from the saved
+evidence and latest story:
+
+```powershell
+$body = @{
+    instruction = "Make the tone more optimistic and focus more on the 2014, 2018, and 2022 World Cups."
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Method Post `
+    -Uri "http://127.0.0.1:8000/api/stories/STORY_ID/revisions/" `
+    -ContentType "application/json" `
+    -Body $body
+```
+
+The response includes the revised story, its revision number, and its ID. Retrieve
+the latest story and its full revision history with:
+
+```text
+GET /api/stories/STORY_ID/
+```
+
 ## Deploy to Render or Railway
 
 Both platforms detect the included `Procfile` and start the service with Gunicorn.
@@ -118,3 +143,18 @@ Both platforms detect the included `Procfile` and start the service with Gunicor
    `DJANGO_ALLOWED_HOSTS` to its generated public hostname after the first deploy.
 
 6. Deploy, then send requests to `https://YOUR-DOMAIN/api/stories/`.
+
+## Database migrations and tests
+
+Apply database migrations after deploying:
+
+```powershell
+python manage.py migrate
+```
+
+Run the test suite against Neon with `--keepdb`. This keeps the temporary PostgreSQL
+test database, avoiding connection-pool cleanup conflicts:
+
+```powershell
+python manage.py test stories --keepdb
+```
