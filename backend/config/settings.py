@@ -15,13 +15,13 @@ if not SECRET_KEY:
         SECRET_KEY = "django-insecure-development-key-change-before-production"
     else:
         raise RuntimeError("DJANGO_SECRET_KEY must be configured when DEBUG is false.")
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get(
-        "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]"
-    ).split(",")
-    if host.strip()
-]
+configured_hosts = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]"
+).split(",")
+vercel_host = os.environ.get("VERCEL_URL", "").strip()
+ALLOWED_HOSTS = [host.strip() for host in configured_hosts if host.strip()]
+if vercel_host and vercel_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(vercel_host)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
