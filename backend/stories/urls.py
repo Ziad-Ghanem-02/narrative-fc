@@ -7,6 +7,7 @@ from stories.views import (
     StoryGenerationJobDetailView,
     StoryGenerationJobView,
     StoryEvaluationView,
+    StoryEvaluationResultsView,
     HumanStoryVisualsView,
     StoryRevisionView,
     WorldCupMapSummaryView,
@@ -36,6 +37,7 @@ urlpatterns = [
     ),
     path("stories/", StoryGenerationView.as_view(), name="story-generation"),
     path("evaluations/", StoryEvaluationView.as_view(), name="story-evaluation"),
+    path("evaluations/results/", StoryEvaluationResultsView.as_view(), name="story-evaluation-results"),
     path("stories/latest/", LatestStoryDetailView.as_view(), name="latest-story-detail"),
     path("stories/<uuid:story_id>/", StoryDetailView.as_view(), name="story-detail"),
     path(

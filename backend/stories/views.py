@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Avg, Count, Max
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,7 +10,7 @@ from story_pipeline.graph import run_story
 from story_pipeline.human_story_visuals import load_human_story_visuals
 from story_pipeline.story_links import retain_valid_chart_markers
 from story_pipeline.world_cup import load_map_summary
-from stories.models import StoryGeneration, StoryGenerationJob, StoryRevision
+from stories.models import StoryEvaluation, StoryGeneration, StoryGenerationJob, StoryRevision
 from stories.serializers import (
     StoryEvaluationRequestSerializer,
     StoryRequestSerializer,
@@ -187,4 +187,73 @@ class StoryEvaluationView(APIView):
         return Response(
             {"id": evaluation.id, "created_at": evaluation.created_at},
             status=status.HTTP_201_CREATED,
+        )
+
+
+class StoryEvaluationResultsView(APIView):
+    def get(self, request):
+        evaluations = StoryEvaluation.objects.all()
+        averages = evaluations.aggregate(
+            clarity_agentic_story=Avg("clarity_agentic_story"),
+            clarity_human_written_story=Avg("clarity_human_written_story"),
+            trustworthiness_agentic_story=Avg("trustworthiness_agentic_story"),
+            trustworthiness_human_written_story=Avg("trustworthiness_human_written_story"),
+            evidence_agentic_story=Avg("evidence_agentic_story"),
+            evidence_human_written_story=Avg("evidence_human_written_story"),
+            insightfulness_agentic_story=Avg("insightfulness_agentic_story"),
+            insightfulness_human_written_story=Avg("insightfulness_human_written_story"),
+            engagement_agentic_story=Avg("engagement_agentic_story"),
+            engagement_human_written_story=Avg("engagement_human_written_story"),
+        )
+
+        def score(story_type, criterion):
+            value = averages[f"{criterion}_{story_type}"]
+            return round(float(value), 2) if value is not None else None
+
+        return Response(
+            {
+                "total_evaluations": evaluations.count(),
+                "preferences": {
+                    "agentic_story": evaluations.filter(
+                        preferred_story=StoryEvaluation.PreferredStory.AGENTIC_STORY
+                    ).count(),
+                    "human_written_story": evaluations.filter(
+                        preferred_story=StoryEvaluation.PreferredStory.HUMAN_WRITTEN_STORY
+                    ).count(),
+                    "tie": evaluations.filter(
+                        preferred_story=StoryEvaluation.PreferredStory.TIE
+                    ).count(),
+                },
+                "scores": {
+                    "agentic_story": {
+                        criterion: score("agentic_story", criterion)
+                        for criterion in (
+                            "clarity",
+                            "trustworthiness",
+                            "evidence",
+                            "insightfulness",
+                            "engagement",
+                        )
+                    },
+                    "human_written_story": {
+                        criterion: score("human_written_story", criterion)
+                        for criterion in (
+                            "clarity",
+                            "trustworthiness",
+                            "evidence",
+                            "insightfulness",
+                            "engagement",
+                        )
+                    },
+                },
+                "reviews": [
+                    {
+                        "feedback": evaluation.feedback,
+                        "preferred_story": evaluation.preferred_story,
+                        "created_at": evaluation.created_at,
+                    }
+                    for evaluation in evaluations.exclude(feedback="")
+                    .order_by("-created_at")[:100]
+                ],
+            }
         )

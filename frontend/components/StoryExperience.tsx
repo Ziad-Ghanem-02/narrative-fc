@@ -27,7 +27,7 @@ export function StoryExperience() {
   const [question, setQuestion] = useState(defaultQuestion);
   const [story, setStory] = useState<StoryResponse | null>(null);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState("");
 
   useEffect(() => {
@@ -37,7 +37,6 @@ export function StoryExperience() {
     }
 
     let isCurrent = true;
-    setIsLoading(true);
     setError("");
 
     const storyRequest = storyId ? getStory(storyId) : getLatestStory();
@@ -68,11 +67,6 @@ export function StoryExperience() {
               : "The saved story could not be loaded.",
           );
         }
-      })
-      .finally(() => {
-        if (isCurrent) {
-          setIsLoading(false);
-        }
       });
 
     return () => {
@@ -82,7 +76,7 @@ export function StoryExperience() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsLoading(true);
+    setIsGenerating(true);
     setError("");
     setGenerationStatus("Queueing story generation...");
 
@@ -116,7 +110,7 @@ export function StoryExperience() {
           : "Story generation failed.",
       );
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
       setGenerationStatus("");
     }
   }
@@ -157,10 +151,10 @@ export function StoryExperience() {
         />
         <button
           className="gold-button mt-4 px-6 py-3 text-sm disabled:cursor-wait disabled:opacity-60"
-          disabled={isLoading}
+          disabled={isGenerating}
           type="submit"
         >
-          {isLoading ? "GENERATING AGENTIC STORY..." : "GENERATE AGENTIC STORY"}
+          {isGenerating ? "GENERATING AGENTIC STORY..." : "GENERATE AGENTIC STORY"}
         </button>
         {generationStatus && (
           <p className="mt-3 text-sm text-slate-400">{generationStatus}</p>

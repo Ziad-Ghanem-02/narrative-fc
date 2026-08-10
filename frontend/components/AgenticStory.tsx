@@ -95,9 +95,6 @@ export function AgenticStory({
           >
             {isRewriting ? "REWRITING STORY..." : "REWRITE STORY TEXT"}
           </button>
-          <p className="mt-2 text-xs text-slate-500">
-            Rewrites only the story text and chart pointers. Existing chart data stays unchanged.
-          </p>
           {rewriteError && <p className="mt-2 text-xs text-rose-300">{rewriteError}</p>}
         </form>
         <div className="mt-6 space-y-5 text-sm leading-7 text-slate-200">

@@ -73,3 +73,26 @@ export interface HumanStoryVisualsResponse {
   queries: Array<{ purpose: string; sql: string }>;
   charts: ChartSpec[];
 }
+
+export type EvaluationScores = Record<
+  "clarity" | "trustworthiness" | "evidence" | "insightfulness" | "engagement",
+  number | null
+>;
+
+export interface EvaluationResultsResponse {
+  total_evaluations: number;
+  preferences: {
+    agentic_story: number;
+    human_written_story: number;
+    tie: number;
+  };
+  scores: {
+    agentic_story: EvaluationScores;
+    human_written_story: EvaluationScores;
+  };
+  reviews: Array<{
+    feedback: string;
+    preferred_story: "agentic_story" | "human_written_story" | "tie";
+    created_at: string;
+  }>;
+}

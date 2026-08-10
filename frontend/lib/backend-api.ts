@@ -1,5 +1,6 @@
 import type {
   EvaluationResponse,
+  EvaluationResultsResponse,
   HumanStoryVisualsResponse,
   StoryJobResponse,
   StoryResponse,
@@ -97,4 +98,8 @@ export function submitEvaluation(
     method: "POST",
     body: JSON.stringify(evaluation),
   });
+}
+
+export function getEvaluationResults(): Promise<EvaluationResultsResponse> {
+  return request<EvaluationResultsResponse>("/evaluations/results/");
 }

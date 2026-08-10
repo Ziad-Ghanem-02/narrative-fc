@@ -80,6 +80,41 @@ class StoryGenerationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, load_human_story_visuals.return_value)
 
+    def test_returns_anonymous_evaluation_results(self):
+        story_generation = StoryGeneration.objects.create(
+            question="Question",
+            queries=[],
+            results=[],
+            evidence="Evidence",
+            plan="Plan",
+            original_story="Agentic story",
+            current_story="Agentic story",
+            charts=[],
+        )
+        StoryEvaluation.objects.create(
+            story_generation=story_generation,
+            clarity_agentic_story=5,
+            clarity_human_written_story=4,
+            trustworthiness_agentic_story=4,
+            trustworthiness_human_written_story=5,
+            evidence_agentic_story=5,
+            evidence_human_written_story=4,
+            insightfulness_agentic_story=3,
+            insightfulness_human_written_story=4,
+            engagement_agentic_story=4,
+            engagement_human_written_story=5,
+            preferred_story="human_written_story",
+            feedback="The human story was more engaging.",
+        )
+
+        response = self.client.get("/api/evaluations/results/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["total_evaluations"], 1)
+        self.assertEqual(response.data["preferences"]["human_written_story"], 1)
+        self.assertEqual(response.data["scores"]["agentic_story"]["clarity"], 5.0)
+        self.assertEqual(response.data["reviews"][0]["feedback"], "The human story was more engaging.")
+
     @patch("story_pipeline.world_cup.run_query_with_columns")
     def test_load_map_summary_returns_json_ready_country_stats(
         self,
