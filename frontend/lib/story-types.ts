@@ -63,3 +63,8 @@ export interface StoryRevisionResponse {
   story: string;
   created_at: string;
 }
+
+export interface EvaluationResponse {
+  id: number;
+  created_at: string;
+}

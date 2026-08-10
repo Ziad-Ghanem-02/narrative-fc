@@ -1,4 +1,5 @@
 import type {
+  EvaluationResponse,
   StoryJobResponse,
   StoryResponse,
   StoryRevisionResponse,
@@ -65,5 +66,30 @@ export function reviseStory(
   return request<StoryRevisionResponse>(`/stories/${storyId}/revisions/`, {
     method: "POST",
     body: JSON.stringify({ instruction }),
+  });
+}
+
+export interface EvaluationSubmission {
+  story_id: string;
+  clarity_a: number;
+  clarity_b: number;
+  trustworthiness_a: number;
+  trustworthiness_b: number;
+  evidence_a: number;
+  evidence_b: number;
+  insightfulness_a: number;
+  insightfulness_b: number;
+  engagement_a: number;
+  engagement_b: number;
+  preferred_story: "story_a" | "story_b" | "tie";
+  feedback: string;
+}
+
+export function submitEvaluation(
+  evaluation: EvaluationSubmission,
+): Promise<EvaluationResponse> {
+  return request<EvaluationResponse>("/evaluations/", {
+    method: "POST",
+    body: JSON.stringify(evaluation),
   });
 }

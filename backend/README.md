@@ -195,11 +195,14 @@ Both platforms use the included `Procfile`: the `web` process serves Django and 
    Render can create both services from `render.yaml`. On Railway, create the
    separate worker service manually.
 
-7. Deploy, then submit jobs to `https://YOUR-DOMAIN/api/story-jobs/`.
+7. Deploy, then submit jobs to `https://YOUR-DOMAIN/api/story-jobs/`. The Render
+  blueprint runs `python manage.py migrate` as its release command. On other
+  platforms, the web process in the included `Procfile` applies migrations before
+  starting Gunicorn.
 
 ## Database migrations and tests
 
-Apply database migrations after deploying:
+Apply database migrations manually when deploying outside the configured web process:
 
 ```powershell
 python manage.py migrate

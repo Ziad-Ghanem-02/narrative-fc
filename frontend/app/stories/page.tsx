@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { StoryExperience } from "@/components/StoryExperience";
 
@@ -37,15 +37,6 @@ export default function Stories() {
         >
           <StoryExperience />
         </Suspense>
-
-        <div className="mt-10 flex justify-end">
-          <Link
-            className="gold-button inline-flex items-center gap-3 px-7 py-4 text-sm"
-            href="/evaluation"
-          >
-            NEXT: RATE THE STORIES <ArrowRight size={18} />
-          </Link>
-        </div>
       </div>
     </main>
   );

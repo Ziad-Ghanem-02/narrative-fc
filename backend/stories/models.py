@@ -62,3 +62,29 @@ class StoryRevision(models.Model):
                 name="unique_story_revision_number",
             )
         ]
+
+
+class StoryEvaluation(models.Model):
+    class PreferredStory(models.TextChoices):
+        STORY_A = "story_a", "Story A"
+        STORY_B = "story_b", "Story B"
+        TIE = "tie", "Tie"
+
+    story_generation = models.ForeignKey(
+        StoryGeneration,
+        on_delete=models.CASCADE,
+        related_name="evaluations",
+    )
+    clarity_a = models.PositiveSmallIntegerField()
+    clarity_b = models.PositiveSmallIntegerField()
+    trustworthiness_a = models.PositiveSmallIntegerField()
+    trustworthiness_b = models.PositiveSmallIntegerField()
+    evidence_a = models.PositiveSmallIntegerField()
+    evidence_b = models.PositiveSmallIntegerField()
+    insightfulness_a = models.PositiveSmallIntegerField()
+    insightfulness_b = models.PositiveSmallIntegerField()
+    engagement_a = models.PositiveSmallIntegerField()
+    engagement_b = models.PositiveSmallIntegerField()
+    preferred_story = models.CharField(max_length=8, choices=PreferredStory.choices)
+    feedback = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

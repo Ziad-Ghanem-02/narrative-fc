@@ -1,7 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 
 import { AgenticStory } from "@/components/AgenticStory";
 import {
@@ -197,6 +199,19 @@ export function StoryExperience() {
           </div>
         </article>
       </section>
+
+      <div className="mt-10 flex justify-end">
+        <Link
+          className="gold-button inline-flex items-center gap-3 px-7 py-4 text-sm"
+          href={`/evaluation?story=${story?.id ?? ""}`}
+          aria-disabled={!story}
+          onClick={(event) => {
+            if (!story) event.preventDefault();
+          }}
+        >
+          NEXT: RATE THE STORIES <ArrowRight size={18} />
+        </Link>
+      </div>
     </>
   );
 }

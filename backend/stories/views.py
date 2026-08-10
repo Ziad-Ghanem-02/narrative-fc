@@ -10,7 +10,11 @@ from story_pipeline.graph import run_story
 from story_pipeline.story_links import retain_valid_chart_markers
 from story_pipeline.world_cup import load_map_summary
 from stories.models import StoryGeneration, StoryGenerationJob, StoryRevision
-from stories.serializers import StoryRequestSerializer, StoryRevisionRequestSerializer
+from stories.serializers import (
+    StoryEvaluationRequestSerializer,
+    StoryRequestSerializer,
+    StoryRevisionRequestSerializer,
+)
 from stories.services import persist_story
 
 
@@ -165,5 +169,16 @@ class StoryRevisionView(APIView):
                 "story": revision.story,
                 "created_at": revision.created_at,
             },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class StoryEvaluationView(APIView):
+    def post(self, request):
+        serializer = StoryEvaluationRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        evaluation = serializer.save()
+        return Response(
+            {"id": evaluation.id, "created_at": evaluation.created_at},
             status=status.HTTP_201_CREATED,
         )

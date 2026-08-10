@@ -12,7 +12,7 @@ from story_pipeline.graph import create_graph
 from story_pipeline.serialization import to_json_value
 from story_pipeline.story_links import retain_valid_chart_markers
 from story_pipeline.world_cup import load_map_summary
-from stories.models import StoryGeneration, StoryGenerationJob, StoryRevision
+from stories.models import StoryEvaluation, StoryGeneration, StoryGenerationJob, StoryRevision
 from stories.services import process_next_story_job
 
 
@@ -106,6 +106,81 @@ class StoryGenerationViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("question", response.data)
+
+    def test_accepts_anonymous_story_evaluation(self):
+        story_generation = StoryGeneration.objects.create(
+            question="Did underdogs close the gap?",
+            queries=[],
+            results=[],
+            evidence="Evidence",
+            plan="Plan",
+            original_story="Story A",
+            current_story="Story A",
+            charts=[],
+        )
+        ratings = {
+            "clarity_a": 4,
+            "clarity_b": 3,
+            "trustworthiness_a": 5,
+            "trustworthiness_b": 4,
+            "evidence_a": 5,
+            "evidence_b": 3,
+            "insightfulness_a": 4,
+            "insightfulness_b": 4,
+            "engagement_a": 3,
+            "engagement_b": 5,
+        }
+
+        response = self.client.post(
+            "/api/evaluations/",
+            {
+                "story_id": str(story_generation.id),
+                **ratings,
+                "preferred_story": "story_b",
+                "feedback": "The human story was more engaging.",
+            },
+            format="json",
+        )
+
+        evaluation = StoryEvaluation.objects.get()
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(evaluation.story_generation, story_generation)
+        self.assertEqual(evaluation.preferred_story, "story_b")
+        self.assertEqual(evaluation.feedback, "The human story was more engaging.")
+
+    def test_rejects_evaluation_rating_outside_scale(self):
+        story_generation = StoryGeneration.objects.create(
+            question="Question",
+            queries=[],
+            results=[],
+            evidence="Evidence",
+            plan="Plan",
+            original_story="Story A",
+            current_story="Story A",
+            charts=[],
+        )
+        response = self.client.post(
+            "/api/evaluations/",
+            {
+                "story_id": str(story_generation.id),
+                "clarity_a": 6,
+                "clarity_b": 3,
+                "trustworthiness_a": 3,
+                "trustworthiness_b": 3,
+                "evidence_a": 3,
+                "evidence_b": 3,
+                "insightfulness_a": 3,
+                "insightfulness_b": 3,
+                "engagement_a": 3,
+                "engagement_b": 3,
+                "preferred_story": "tie",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("clarity_a", response.data)
+        self.assertEqual(StoryEvaluation.objects.count(), 0)
 
     def test_queues_story_generation_job(self):
         response = self.client.post(
