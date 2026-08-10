@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from django.db.models import Avg, Count, Max
 from django.shortcuts import get_object_or_404
@@ -17,6 +19,9 @@ from stories.serializers import (
     StoryRevisionRequestSerializer,
 )
 from stories.services import persist_story
+
+
+logger = logging.getLogger(__name__)
 
 
 def story_response(story_generation: StoryGeneration) -> dict:
@@ -137,34 +142,41 @@ class LatestStoryDetailView(APIView):
 
 
 class StoryRevisionView(APIView):
-    @transaction.atomic
     def post(self, request, story_id):
         serializer = StoryRevisionRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        story_generation = get_object_or_404(
-            StoryGeneration.objects.select_for_update(),
-            pk=story_id,
-        )
-        revised_story = StoryRewriter().rewrite(
-            question=story_generation.question,
-            evidence=story_generation.evidence,
-            story=story_generation.current_story,
-            charts=story_generation.charts,
-            instruction=serializer.validated_data["instruction"],
-        )
-        revision_number = (
-            story_generation.revisions.aggregate(max_number=Max("number"))["max_number"]
-            or 0
-        ) + 1
-        revision = StoryRevision.objects.create(
-            story_generation=story_generation,
-            number=revision_number,
-            instruction=serializer.validated_data["instruction"],
-            story=revised_story,
-        )
-        story_generation.current_story = revised_story
-        story_generation.save(update_fields=["current_story", "updated_at"])
+        story_generation = get_object_or_404(StoryGeneration, pk=story_id)
+        instruction = serializer.validated_data["instruction"]
+        try:
+            revised_story = StoryRewriter().rewrite(
+                question=story_generation.question,
+                evidence=story_generation.evidence,
+                story=story_generation.current_story,
+                charts=story_generation.charts,
+                instruction=instruction,
+            )
+        except Exception as error:
+            logger.exception("Story revision failed for story %s.", story_id)
+            return Response(
+                {"detail": f"Story revision failed: {error}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        with transaction.atomic():
+            story_generation = StoryGeneration.objects.select_for_update().get(pk=story_id)
+            revision_number = (
+                story_generation.revisions.aggregate(max_number=Max("number"))["max_number"]
+                or 0
+            ) + 1
+            revision = StoryRevision.objects.create(
+                story_generation=story_generation,
+                number=revision_number,
+                instruction=instruction,
+                story=revised_story,
+            )
+            story_generation.current_story = revised_story
+            story_generation.save(update_fields=["current_story", "updated_at"])
 
         return Response(
             {
