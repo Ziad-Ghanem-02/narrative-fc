@@ -35,14 +35,26 @@ interface BackendChartProps {
 
 
 const fallbackColors = ["#EAB308", "#14B8A6", "#F97316", "#8B5CF6", "#F43F5E"];
-const tooltipStyle = {
-  backgroundColor: "#07131c",
-  border: "1px solid rgba(234,179,8,.35)",
-  borderRadius: 12,
-  boxShadow: "0 16px 36px rgba(0,0,0,.35)",
-  color: "#f8fafc",
-};
 
+const tooltipProps = {
+  contentStyle: {
+    backgroundColor: "#18384d",
+    border: "1px solid rgba(248,250,252,0.18)",
+    borderRadius: 12,
+    boxShadow: "0 16px 36px rgba(0,0,0,.35)",
+  },
+  labelStyle: {
+    color: "#f8fafc",
+    fontWeight: 400,
+  },
+  itemStyle: {
+    color: "#f8fafc",
+    fontWeight: 400,
+  },
+  wrapperStyle: {
+    outline: "none",
+  },
+};
 
 function formatValue(value: string | number, format: "number" | "percentage") {
   const numericValue = typeof value === "number" ? value : Number(value);
@@ -93,7 +105,7 @@ export function BackendChart({ chart }: BackendChartProps) {
       }}
     />,
     <Tooltip
-      contentStyle={tooltipStyle}
+      {...tooltipProps}
       formatter={(value: string | number, name: string) => [
         formatValue(value, yAxis.format),
         name,
@@ -137,7 +149,7 @@ export function BackendChart({ chart }: BackendChartProps) {
       <ResponsiveContainer height={320} width="100%">
         <PieChart>
           <Tooltip
-            contentStyle={tooltipStyle}
+            {...tooltipProps}
             formatter={(value: string | number) => formatValue(value, yAxis.format)}
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -171,7 +183,7 @@ export function BackendChart({ chart }: BackendChartProps) {
           <PolarGrid stroke="#284357" />
           <PolarAngleAxis dataKey={chart.x_axis.data_key} tick={{ fill: "#cbd5e1", fontSize: 11 }} />
           <PolarRadiusAxis tick={{ fill: "#94a3b8", fontSize: 10 }} />
-          <Tooltip contentStyle={tooltipStyle} />
+          <Tooltip {...tooltipProps} />
           <Legend wrapperStyle={{ fontSize: 11 }} />
           {chart.series.map((series) => (
             <Radar
@@ -189,27 +201,71 @@ export function BackendChart({ chart }: BackendChartProps) {
     );
   }
 
-  if (chart.type === "scatter" && firstSeries) {
-    return (
-      <ResponsiveContainer height={320} width="100%">
-        <ScatterChart margin={{ bottom: 16, left: 16, right: 16, top: 8 }}>
-          <CartesianGrid stroke="#18303f" strokeDasharray="3 4" />
-          <XAxis
-            {...axisProps}
-            dataKey={chart.x_axis.data_key}
-            label={{ value: chart.x_axis.label, fill: "#94a3b8", fontSize: 11, position: "insideBottom", offset: -4 }}
-          />
-          <YAxis
-            {...axisProps}
-            dataKey={firstSeries.data_key}
-            label={{ value: yAxis.label, fill: "#94a3b8", fontSize: 11, angle: -90, position: "insideLeft" }}
-          />
-          <Tooltip contentStyle={tooltipStyle} />
-          <Scatter data={chart.data} fill={firstSeries.color} name={firstSeries.label} />
-        </ScatterChart>
-      </ResponsiveContainer>
-    );
-  }
+if (chart.type === "scatter" && firstSeries) {
+  return (
+    <ResponsiveContainer height={320} width="100%">
+      <ScatterChart margin={{ bottom: 16, left: 16, right: 16, top: 8 }}>
+        <CartesianGrid stroke="#18303f" strokeDasharray="3 4" />
+        <XAxis
+          {...axisProps}
+          type="number"
+          dataKey={chart.x_axis.data_key}
+          domain={[0, 100]}
+          tickFormatter={(value) => `${Number(value).toFixed(0)}%`}
+          label={{
+            value: chart.x_axis.label,
+            fill: "#94a3b8",
+            fontSize: 10,
+            position: "insideBottom",
+            offset: -4,
+          }}
+        />
+        <YAxis
+          {...axisProps}
+          type="number"
+          dataKey={firstSeries.data_key}
+          tickFormatter={(value) => formatValue(value, yAxis.format)}
+          label={{
+            value: yAxis.label,
+            fill: "#94a3b8",
+            fontSize: 10,
+            angle: -90,
+            position: "insideLeft",
+          }}
+        />
+        <Tooltip
+          {...tooltipProps}
+          content={({ active, payload }) => {
+            const point = payload?.[0]?.payload;
+            if (!active || !point) return null;
+
+            return (
+              <div 
+                style={{ 
+                  ...tooltipProps.contentStyle, 
+                  padding: "12px 16px",
+                  borderRadius: "6px",  
+                  margin: 0             
+                }}
+              >
+                <p style={{ ...tooltipProps.labelStyle, margin: "0 0 8px 0", fontWeight: 600 }}>
+                  {String(point.team_name ?? "")}
+                </p>
+                <p style={{ ...tooltipProps.itemStyle, margin: "4px 0" }}>
+                  {chart.x_axis.label}: {Number(point[chart.x_axis.data_key]).toFixed(1)}%
+                </p>
+                <p style={{ ...tooltipProps.itemStyle, margin: "4px 0" }}>
+                  {yAxis.label}: {formatValue(point[firstSeries.data_key] as number, yAxis.format)}
+                </p>
+              </div>
+            );
+          }}
+        />
+        <Scatter data={chart.data} fill={firstSeries.color} name={firstSeries.label} />
+      </ScatterChart>
+    </ResponsiveContainer>
+  );
+}
 
   if (chart.type === "horizontal_bar") {
     return (
@@ -218,7 +274,7 @@ export function BackendChart({ chart }: BackendChartProps) {
           <CartesianGrid stroke="#18303f" strokeDasharray="3 4" horizontal={false} />
           <XAxis {...axisProps} tickFormatter={(value) => formatValue(value, yAxis.format)} type="number" />
           <YAxis {...axisProps} dataKey={chart.x_axis.data_key} type="category" width={100} />
-          <Tooltip contentStyle={tooltipStyle} />
+          <Tooltip {...tooltipProps} />
           {chart.series.map((series) => (
             <Bar
               dataKey={series.data_key}

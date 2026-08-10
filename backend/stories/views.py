@@ -103,6 +103,29 @@ class StoryDetailView(APIView):
         return Response(response)
 
 
+class LatestStoryDetailView(APIView):
+    def get(self, request):
+        story_generation = StoryGeneration.objects.order_by("-created_at").first()
+        if story_generation is None:
+            return Response(
+                {"detail": "No generated stories exist yet."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        response = story_response(story_generation)
+        response["revisions"] = [
+            {
+                "id": revision.id,
+                "number": revision.number,
+                "instruction": revision.instruction,
+                "story": revision.story,
+                "created_at": revision.created_at,
+            }
+            for revision in story_generation.revisions.order_by("number")
+        ]
+        return Response(response)
+
+
 class StoryRevisionView(APIView):
     @transaction.atomic
     def post(self, request, story_id):

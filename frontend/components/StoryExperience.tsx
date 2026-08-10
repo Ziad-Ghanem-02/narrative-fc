@@ -4,7 +4,13 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AgenticStory } from "@/components/AgenticStory";
-import { getStory, getStoryJob, queueStoryGeneration } from "@/lib/backend-api";
+import {
+  getLatestStory,
+  getStory,
+  getStoryJob,
+  queueStoryGeneration,
+  reviseStory,
+} from "@/lib/backend-api";
 import { humanStory } from "@/lib/human-story";
 import type { StoryResponse } from "@/lib/story-types";
 
@@ -24,7 +30,7 @@ export function StoryExperience() {
 
   useEffect(() => {
     const storyId = searchParams.get("story");
-    if (!storyId || story?.id === storyId) {
+    if (storyId && story?.id === storyId) {
       return;
     }
 
@@ -32,15 +38,28 @@ export function StoryExperience() {
     setIsLoading(true);
     setError("");
 
-    void getStory(storyId)
+    const storyRequest = storyId ? getStory(storyId) : getLatestStory();
+
+    void storyRequest
       .then((response) => {
         if (isCurrent) {
           setStory(response);
           setQuestion(response.question);
+          if (!storyId) {
+            router.replace(`/stories?story=${response.id}`);
+          }
         }
       })
       .catch((requestError: unknown) => {
         if (isCurrent) {
+          if (
+            !storyId &&
+            requestError instanceof Error &&
+            requestError.message === "No generated stories exist yet."
+          ) {
+            setStory(null);
+            return;
+          }
           setError(
             requestError instanceof Error
               ? requestError.message
@@ -57,7 +76,7 @@ export function StoryExperience() {
     return () => {
       isCurrent = false;
     };
-  }, [searchParams, story?.id]);
+  }, [router, searchParams, story?.id]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -100,6 +119,27 @@ export function StoryExperience() {
     }
   }
 
+  async function handleRewrite(instruction: string) {
+    if (!story) {
+      throw new Error("No story is available to rewrite.");
+    }
+
+    const revision = await reviseStory(story.id, instruction);
+    setStory((previous) => {
+      if (!previous || previous.id !== revision.story_id) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        story: revision.story,
+        // Keep the original chart data and metadata untouched.
+        charts: previous.charts,
+        updated_at: revision.created_at,
+      };
+    });
+  }
+
   return (
     <>
       <form className="panel mt-8 p-5" onSubmit={handleSubmit}>
@@ -130,6 +170,7 @@ export function StoryExperience() {
         <div className="mt-8">
           <AgenticStory
             charts={story.charts}
+            onRewrite={handleRewrite}
             story={story.story}
             storyId={story.id}
           />

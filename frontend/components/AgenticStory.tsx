@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { BackendChart } from "@/components/BackendChart";
 import type { ChartSpec } from "@/lib/story-types";
@@ -10,14 +10,23 @@ interface AgenticStoryProps {
   story: string;
   charts: ChartSpec[];
   storyId: string;
+  onRewrite: (instruction: string) => Promise<void>;
 }
 
 
 const chartMarker = /\[(?:chart:([a-z0-9-]+)|(chart-[a-z0-9-]+))\]/g;
 
 
-export function AgenticStory({ story, charts, storyId }: AgenticStoryProps) {
+export function AgenticStory({
+  story,
+  charts,
+  storyId,
+  onRewrite,
+}: AgenticStoryProps) {
   const [activeChartId, setActiveChartId] = useState(charts[0]?.id ?? "");
+  const [instruction, setInstruction] = useState("");
+  const [rewriteError, setRewriteError] = useState("");
+  const [isRewriting, setIsRewriting] = useState(false);
   const chartPanel = useRef<HTMLElement>(null);
   const chartsById = new Map(charts.map((chart) => [chart.id, chart]));
   const activeChart = chartsById.get(activeChartId) ?? charts[0];
@@ -36,6 +45,29 @@ export function AgenticStory({ story, charts, storyId }: AgenticStoryProps) {
     }
   }
 
+  async function handleRewriteSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmedInstruction = instruction.trim();
+    if (!trimmedInstruction) {
+      return;
+    }
+
+    setIsRewriting(true);
+    setRewriteError("");
+    try {
+      await onRewrite(trimmedInstruction);
+      setInstruction("");
+    } catch (error) {
+      setRewriteError(
+        error instanceof Error
+          ? error.message
+          : "Story rewrite failed. Please try again.",
+      );
+    } finally {
+      setIsRewriting(false);
+    }
+  }
+
   return (
     <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,.8fr)]">
       <article className="panel min-w-0 p-6 md:p-8">
@@ -45,6 +77,29 @@ export function AgenticStory({ story, charts, storyId }: AgenticStoryProps) {
         <p className="mt-3 text-center text-xs text-slate-500">
           Persisted story ID: {storyId}
         </p>
+        <form className="mt-5 rounded-xl border border-white/10 bg-white/[.02] p-4" onSubmit={handleRewriteSubmit}>
+          <label className="text-xs font-bold uppercase tracking-[.14em] text-slate-400" htmlFor="story-rewrite-instruction">
+            Rewrite Story A
+          </label>
+          <textarea
+            className="mt-2 min-h-20 w-full rounded-lg border border-white/10 bg-[#07131c] p-3 text-sm leading-6 text-slate-200 outline-none focus:border-[#efbc42]"
+            id="story-rewrite-instruction"
+            onChange={(event) => setInstruction(event.target.value)}
+            placeholder="Example: make it shorter and more formal, keep all chart references accurate."
+            value={instruction}
+          />
+          <button
+            className="gold-button mt-3 px-4 py-2 text-xs disabled:cursor-wait disabled:opacity-60"
+            disabled={isRewriting || !instruction.trim()}
+            type="submit"
+          >
+            {isRewriting ? "REWRITING STORY..." : "REWRITE STORY TEXT"}
+          </button>
+          <p className="mt-2 text-xs text-slate-500">
+            Rewrites only the story text and chart pointers. Existing chart data stays unchanged.
+          </p>
+          {rewriteError && <p className="mt-2 text-xs text-rose-300">{rewriteError}</p>}
+        </form>
         <div className="mt-6 space-y-5 text-sm leading-7 text-slate-200">
           {story
             .split(/\n{2,}/)

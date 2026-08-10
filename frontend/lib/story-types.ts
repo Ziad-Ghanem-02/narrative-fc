@@ -54,3 +54,12 @@ export interface StoryJobResponse {
   story?: StoryResponse;
   detail?: string;
 }
+
+export interface StoryRevisionResponse {
+  story_id: string;
+  revision_id: string;
+  revision_number: number;
+  instruction: string;
+  story: string;
+  created_at: string;
+}

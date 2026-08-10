@@ -1,4 +1,8 @@
-import type { StoryJobResponse, StoryResponse } from "@/lib/story-types";
+import type {
+  StoryJobResponse,
+  StoryResponse,
+  StoryRevisionResponse,
+} from "@/lib/story-types";
 
 
 const apiBaseUrl = "/api/backend";
@@ -48,4 +52,18 @@ export function getStoryJob(jobId: string): Promise<StoryJobResponse> {
 
 export function getStory(storyId: string): Promise<StoryResponse> {
   return request<StoryResponse>(`/stories/${storyId}/`);
+}
+
+export function getLatestStory(): Promise<StoryResponse> {
+  return request<StoryResponse>("/stories/latest/");
+}
+
+export function reviseStory(
+  storyId: string,
+  instruction: string,
+): Promise<StoryRevisionResponse> {
+  return request<StoryRevisionResponse>(`/stories/${storyId}/revisions/`, {
+    method: "POST",
+    body: JSON.stringify({ instruction }),
+  });
 }

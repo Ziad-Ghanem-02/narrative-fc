@@ -36,6 +36,41 @@ Each object must use this exact shape:
 }}
 
 ==================================================
+BIG TEAMS
+==================================================
+
+For this project, the following teams are ALWAYS considered Traditional Football Powerhouses (Big Teams):
+
+Brazil
+Germany
+Argentina
+Italy
+France
+Spain
+England
+Netherlands
+Portugal
+Uruguay
+
+Treat "West Germany" and "East Germany" as "Germany".
+Treat "Soviet Union" as "Russia".
+
+==================================================
+RULES
+==================================================
+
+If a result contains several stage-based metrics that are nested or overlapping
+rather than additive (for example quarter-finalists, semi-finalists, and finalists
+for the same groups), do NOT use `stacked_bar`, because stacking would imply
+a sum of disjoint parts. Prefer `bar` for grouped comparison, or `composed`
+if you need to emphasize one subset differently.
+
+Always treat West Germany and East Germany as Germany.
+Always treat Soviet Union as Russia.
+
+Every team that is NOT listed above must be treated as an Underdog. like japan, morocco, turkey, egypt, croatia, costa rica, mexico and many more
+
+==================================================
 CHART TYPE SELECTION RULES
 ==================================================
 
@@ -75,5 +110,19 @@ Rules:
 - Use only the columns in the corresponding result.
 - Every series data_key must be a result column.
 - Return only valid JSON; no markdown or explanation.
+- Use `stacked_bar` only when the series represent additive parts of a whole
+  within each category.
+- Do NOT use `stacked_bar` for hierarchical tournament stages such as
+  quarter-finals, semi-finals, and finals in the same result.
+  Example:
+    If columns are:
+      tournament,
+      big_quarter_finalists,
+      underdog_quarter_finalists,
+      big_semi_finalists,
+      underdog_semi_finalists,
+      big_finalists,
+      underdog_finalists
+    then prefer `bar` over `stacked_bar`.
 """
         return ask_llm(prompt)

@@ -108,7 +108,8 @@ Netherlands
 Portugal
 Uruguay
 
-Treat "West Germany" as "Germany".
+Treat "West Germany" and "East Germany" as "Germany".
+Treat Soviet Union as "Russia".
 
 ==================================================
 UNDERDOGS
@@ -132,12 +133,17 @@ tournament_name LIKE '%FIFA Men''s World Cup%'
 
 3. Always include this filter whenever the tournaments table is used.
 
-4. Treat West Germany as Germany.
+4. Treat West Germany and East Germany as Germany and Soviet Union as Russia.
 
 Whenever statistics are grouped by country use
 
 CASE
-WHEN winner='West Germany' THEN 'Germany'
+WHEN winner='West Germany' OR winner='East Germany' THEN 'Germany'
+ELSE winner
+END
+
+CASE 
+WHEN winner='Soviet Union' THEN 'Russia'
 ELSE winner
 END
 
@@ -161,8 +167,6 @@ READABILITY RULES
 ==================================================
 
 Never return IDs.
-
-
 
 The SQL output should be understandable by a human without further lookups.
 
@@ -215,6 +219,10 @@ must collectively cover EVERY chart shape above at least once. Do not skip the
 pie, scatter, or radar shapes just because a time-series query is easier to
 write.
 
+If multiple closely related statistics are part of the same analytical dimension,
+prefer ONE wider query with multiple numeric columns over several nearly
+duplicate queries. Do this especially for knockout-stage representation.
+
 ==================================================
 REQUIRED RESEARCH DIMENSIONS
 ==================================================
@@ -233,7 +241,8 @@ Whenever generating SQL:
 - Every other team is an Underdog.
 - Never create your own classification.
 - Never change the Big Teams list.
-- Always treat West Germany as Germany.
+- Always treat West Germany and East Germany as Germany.
+- Always treat Soviet Union as Russia.
 
 --------------------------------------------------
 1. Goals Scored
@@ -256,37 +265,33 @@ When counting goals,
 Never SUM over any id.
 
 --------------------------------------------------
-2. Quarter-final Representation
+2. Knockout Stage Representation
 --------------------------------------------------
 
-For every tournament calculate:
+For every tournament calculate all of the following in ONE query:
 
-- Number of Big Teams reaching the quarter-finals.
-- Number of Underdog Teams reaching the quarter-finals.
+- Number of Big Teams reaching the quarter-finals
+- Number of Underdog Teams reaching the quarter-finals
+- Number of Big Teams reaching the semi-finals
+- Number of Underdog Teams reaching the semi-finals
+- Number of Big Teams reaching the final
+- Number of Underdog Teams reaching the final
 
-Show how this changes over time.
+Return ONE row per tournament.
 
-This should produce data suitable for a stacked bar chart.
+This result should be suitable for a multi-series grouped bar chart or a composed chart.
 
---------------------------------------------------
-3. Semi-final Representation
---------------------------------------------------
-
-For every tournament calculate:
-
-- Number of Big Teams reaching the semi-finals.
-- Number of Underdog Teams reaching the semi-finals.
-
-Show the trend over time.
-
---------------------------------------------------
-4. Final Appearances
---------------------------------------------------
-
-For every tournament calculate:
-
-- Number of Big Teams reaching the final.
-- Number of Underdog Teams reaching the final.
+Important:
+- Do NOT split quarter-finals, semi-finals, and finals into separate queries.
+- Do NOT use a stacked bar chart for these stage counts, because the stages are nested rather than additive.
+- Use clear column names such as:
+  tournament,
+  big_quarter_finalists,
+  underdog_quarter_finalists,
+  big_semi_finalists,
+  underdog_semi_finalists,
+  big_finalists,
+  underdog_finalists
 
 --------------------------------------------------
 5. Famous Upsets
@@ -356,11 +361,9 @@ Stage Reached
 9. Confederation Composition Snapshot (PIE CHART)
 --------------------------------------------------
 
-Pick ONE recent FIFA Men's World Cup tournament (the most recent one available,
-unless the research question asks about a different period).
+Pick the 2026 FIFA Men's World Cup tournament.
 
-For that single tournament, calculate how many Quarter-final (or Round of 16,
-if Quarter-finals produce too few rows) spots were held by each confederation.
+For that single tournament, calculate how many round of 16 spots were held by each confederation.
 
 Return exactly:
 
@@ -368,8 +371,7 @@ Return exactly:
 - Number of teams
 
 This result must have ONLY 2 columns, one categorical (confederation) and one
-numeric (count), with 3-7 rows. Do NOT include a year/tournament column here —
-this is a single-tournament snapshot suited for a pie chart, not a trend.
+numeric (count), with 3-7 rows.
 
 --------------------------------------------------
 10. Team Performance Relationship (SCATTER PLOT)
@@ -391,7 +393,7 @@ so it can be plotted as a scatter plot of win rate versus goal difference.
 11. Underdog Multi-Metric Profile (RADAR CHART)
 --------------------------------------------------
 
-Select the 4 to 6 Underdog Teams with the most quarter-final (or better)
+Select the from 2002, 2006, 2010, 2014, 2018, 2022 and 2022 the 4 to 6 Underdog Teams with the most round of 16 (or better)
 appearances across all FIFA Men's World Cup tournaments.
 
 For each of these teams, calculate in ONE row:
@@ -399,12 +401,14 @@ For each of these teams, calculate in ONE row:
 - Team Name
 - Total goals scored
 - Total wins
-- Total quarter-final (or better) appearances
+- Total round of 16 (or better) appearances
 - Average goal difference in matches against Big Teams
 
 This result must have ONE row per team and AT LEAST 3 numeric columns besides
 the team name, so it can be plotted as a radar chart comparing several metrics
 per team. Do NOT include a year/tournament column.
+
+DO NOT scale metrics from 0 to 100. Always return the raw numbers. The radar chart can be scaled in the visualization layer.
 
 ==================================================
 QUALITY REQUIREMENTS

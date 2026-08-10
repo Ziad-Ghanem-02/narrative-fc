@@ -1,6 +1,7 @@
 from django.urls import path
 
 from stories.views import (
+    LatestStoryDetailView,
     StoryDetailView,
     StoryGenerationView,
     StoryGenerationJobDetailView,
@@ -27,6 +28,7 @@ urlpatterns = [
         name="story-generation-job-detail",
     ),
     path("stories/", StoryGenerationView.as_view(), name="story-generation"),
+    path("stories/latest/", LatestStoryDetailView.as_view(), name="latest-story-detail"),
     path("stories/<uuid:story_id>/", StoryDetailView.as_view(), name="story-detail"),
     path(
         "stories/<uuid:story_id>/revisions/",
