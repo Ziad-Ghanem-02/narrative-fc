@@ -65,19 +65,24 @@ button, textarea { font: inherit; }
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(112deg, transparent 0 54%, rgba(255,255,255,.08) 56%, transparent 62%);
 }
-.football {
-  width: clamp(120px, 19vw, 220px); aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle at 35% 28%, #fff 0 8%, #d8d8d8 30%, #909090 72%, #383838 100%);
-  box-shadow: 0 24px 55px rgba(0,0,0,.48), inset -25px -20px 35px rgba(0,0,0,.38);
-  position: relative;
+.hero-football {
+  width: clamp(90px, 14vw, 165px);
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 25px rgba(0,0,0,.48));
+  transform: rotate(-14deg);
 }
-.football::before { content:"◆"; position:absolute; inset:0; display:grid; place-items:center; color:#18202a; font-size:clamp(42px,7vw,78px); transform:rotate(18deg); }
-.trophy {
-  width: clamp(80px, 11vw, 132px); height: clamp(155px, 20vw, 240px); position: relative;
-  filter: drop-shadow(0 16px 22px rgba(0,0,0,.38));
+.hero-trophy {
+  width: clamp(150px, 19vw, 235px);
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 16px 22px rgba(0,0,0,.48));
 }
-.trophy::before { content:""; position:absolute; width:72%; height:58%; left:14%; top:0; border-radius:48% 48% 34% 34%; background:linear-gradient(110deg,#76500d,#ffd76d 34%,#b57b16 64%,#f1c74d); }
-.trophy::after { content:""; position:absolute; left:38%; top:48%; width:24%; height:46%; background:linear-gradient(90deg,#8f6012,#f7d068,#9f6b14); clip-path:polygon(25% 0,75% 0,70% 65%,100% 100%,0 100%,30% 65%); }
+.hero-trophy img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 
 .map-tooltip { position:absolute; z-index:10; pointer-events:none; right:18px; top:18px; padding:12px 14px; min-width:170px; }
 .recharts-cartesian-axis-tick-value { fill: #94a3b8; font-size: 11px; }

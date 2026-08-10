@@ -255,7 +255,7 @@ export default function WorldCupMap() {
         <p className="mt-6 border-t border-[#1b3548] pt-4 text-xs text-slate-500">
           {mapDataError
             ? "Live database data is unavailable"
-            : "Source: Neon World Cup database"}
+            : "Source: The Fjelstul World Cup Database"}
         </p>
       </aside>
     </section>

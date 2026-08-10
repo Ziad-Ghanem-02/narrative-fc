@@ -66,8 +66,8 @@ class StoryRevision(models.Model):
 
 class StoryEvaluation(models.Model):
     class PreferredStory(models.TextChoices):
-        STORY_A = "story_a", "Story A"
-        STORY_B = "story_b", "Story B"
+        AGENTIC_STORY = "agentic_story", "Agentic story"
+        HUMAN_WRITTEN_STORY = "human_written_story", "Human-written story"
         TIE = "tie", "Tie"
 
     story_generation = models.ForeignKey(
@@ -75,16 +75,16 @@ class StoryEvaluation(models.Model):
         on_delete=models.CASCADE,
         related_name="evaluations",
     )
-    clarity_a = models.PositiveSmallIntegerField()
-    clarity_b = models.PositiveSmallIntegerField()
-    trustworthiness_a = models.PositiveSmallIntegerField()
-    trustworthiness_b = models.PositiveSmallIntegerField()
-    evidence_a = models.PositiveSmallIntegerField()
-    evidence_b = models.PositiveSmallIntegerField()
-    insightfulness_a = models.PositiveSmallIntegerField()
-    insightfulness_b = models.PositiveSmallIntegerField()
-    engagement_a = models.PositiveSmallIntegerField()
-    engagement_b = models.PositiveSmallIntegerField()
-    preferred_story = models.CharField(max_length=8, choices=PreferredStory.choices)
+    clarity_agentic_story = models.PositiveSmallIntegerField()
+    clarity_human_written_story = models.PositiveSmallIntegerField()
+    trustworthiness_agentic_story = models.PositiveSmallIntegerField()
+    trustworthiness_human_written_story = models.PositiveSmallIntegerField()
+    evidence_agentic_story = models.PositiveSmallIntegerField()
+    evidence_human_written_story = models.PositiveSmallIntegerField()
+    insightfulness_agentic_story = models.PositiveSmallIntegerField()
+    insightfulness_human_written_story = models.PositiveSmallIntegerField()
+    engagement_agentic_story = models.PositiveSmallIntegerField()
+    engagement_human_written_story = models.PositiveSmallIntegerField()
+    preferred_story = models.CharField(max_length=19, choices=PreferredStory.choices)
     feedback = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -72,14 +72,14 @@ export function AgenticStory({
     <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,.8fr)]">
       <article className="panel min-w-0 p-6 md:p-8">
         <h2 className="text-center text-sm font-bold uppercase tracking-[.18em] text-[#efbc42]">
-          Story A · Agentic
+          Agentic story
         </h2>
         <p className="mt-3 text-center text-xs text-slate-500">
           Persisted story ID: {storyId}
         </p>
         <form className="mt-5 rounded-xl border border-white/10 bg-white/[.02] p-4" onSubmit={handleRewriteSubmit}>
           <label className="text-xs font-bold uppercase tracking-[.14em] text-slate-400" htmlFor="story-rewrite-instruction">
-            Rewrite Story A
+            Rewrite agentic story
           </label>
           <textarea
             className="mt-2 min-h-20 w-full rounded-lg border border-white/10 bg-[#07131c] p-3 text-sm leading-6 text-slate-200 outline-none focus:border-[#efbc42]"

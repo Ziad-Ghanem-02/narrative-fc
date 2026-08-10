@@ -114,21 +114,21 @@ class StoryGenerationViewTests(TestCase):
             results=[],
             evidence="Evidence",
             plan="Plan",
-            original_story="Story A",
-            current_story="Story A",
+            original_story="Agentic story",
+            current_story="Agentic story",
             charts=[],
         )
         ratings = {
-            "clarity_a": 4,
-            "clarity_b": 3,
-            "trustworthiness_a": 5,
-            "trustworthiness_b": 4,
-            "evidence_a": 5,
-            "evidence_b": 3,
-            "insightfulness_a": 4,
-            "insightfulness_b": 4,
-            "engagement_a": 3,
-            "engagement_b": 5,
+            "clarity_agentic_story": 4,
+            "clarity_human_written_story": 3,
+            "trustworthiness_agentic_story": 5,
+            "trustworthiness_human_written_story": 4,
+            "evidence_agentic_story": 5,
+            "evidence_human_written_story": 3,
+            "insightfulness_agentic_story": 4,
+            "insightfulness_human_written_story": 4,
+            "engagement_agentic_story": 3,
+            "engagement_human_written_story": 5,
         }
 
         response = self.client.post(
@@ -136,7 +136,7 @@ class StoryGenerationViewTests(TestCase):
             {
                 "story_id": str(story_generation.id),
                 **ratings,
-                "preferred_story": "story_b",
+                "preferred_story": "human_written_story",
                 "feedback": "The human story was more engaging.",
             },
             format="json",
@@ -145,7 +145,7 @@ class StoryGenerationViewTests(TestCase):
         evaluation = StoryEvaluation.objects.get()
         self.assertEqual(response.status_code, 201)
         self.assertEqual(evaluation.story_generation, story_generation)
-        self.assertEqual(evaluation.preferred_story, "story_b")
+        self.assertEqual(evaluation.preferred_story, "human_written_story")
         self.assertEqual(evaluation.feedback, "The human story was more engaging.")
 
     def test_rejects_evaluation_rating_outside_scale(self):
@@ -155,31 +155,31 @@ class StoryGenerationViewTests(TestCase):
             results=[],
             evidence="Evidence",
             plan="Plan",
-            original_story="Story A",
-            current_story="Story A",
+            original_story="Agentic story",
+            current_story="Agentic story",
             charts=[],
         )
         response = self.client.post(
             "/api/evaluations/",
             {
                 "story_id": str(story_generation.id),
-                "clarity_a": 6,
-                "clarity_b": 3,
-                "trustworthiness_a": 3,
-                "trustworthiness_b": 3,
-                "evidence_a": 3,
-                "evidence_b": 3,
-                "insightfulness_a": 3,
-                "insightfulness_b": 3,
-                "engagement_a": 3,
-                "engagement_b": 3,
+                "clarity_agentic_story": 6,
+                "clarity_human_written_story": 3,
+                "trustworthiness_agentic_story": 3,
+                "trustworthiness_human_written_story": 3,
+                "evidence_agentic_story": 3,
+                "evidence_human_written_story": 3,
+                "insightfulness_agentic_story": 3,
+                "insightfulness_human_written_story": 3,
+                "engagement_agentic_story": 3,
+                "engagement_human_written_story": 3,
                 "preferred_story": "tie",
             },
             format="json",
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn("clarity_a", response.data)
+        self.assertIn("clarity_agentic_story", response.data)
         self.assertEqual(StoryEvaluation.objects.count(), 0)
 
     def test_queues_story_generation_job(self):

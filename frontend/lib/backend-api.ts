@@ -71,17 +71,17 @@ export function reviseStory(
 
 export interface EvaluationSubmission {
   story_id: string;
-  clarity_a: number;
-  clarity_b: number;
-  trustworthiness_a: number;
-  trustworthiness_b: number;
-  evidence_a: number;
-  evidence_b: number;
-  insightfulness_a: number;
-  insightfulness_b: number;
-  engagement_a: number;
-  engagement_b: number;
-  preferred_story: "story_a" | "story_b" | "tie";
+  clarity_agentic_story: number;
+  clarity_human_written_story: number;
+  trustworthiness_agentic_story: number;
+  trustworthiness_human_written_story: number;
+  evidence_agentic_story: number;
+  evidence_human_written_story: number;
+  insightfulness_agentic_story: number;
+  insightfulness_human_written_story: number;
+  engagement_agentic_story: number;
+  engagement_human_written_story: number;
+  preferred_story: "agentic_story" | "human_written_story" | "tie";
   feedback: string;
 }
 

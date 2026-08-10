@@ -23,8 +23,8 @@ export default function Stories() {
           </h1>
           <div className="title-line" />
           <p className="mx-auto mt-5 max-w-xl text-sm text-slate-300">
-            Generate a data-backed Story A, then compare it with the human-written
-            Story B.
+            Generate the data-backed agentic story, then compare it with the
+            human-written story.
           </p>
         </header>
 

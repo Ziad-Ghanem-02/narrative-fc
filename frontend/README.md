@@ -2,7 +2,7 @@
 
 Responsive Next.js 15 interface with three routes:
 - `/` — landing page and interactive map
-- `/stories` — blind Story A / Story B comparison plus visualizations
+- `/stories` — blind agentic story / human-written story comparison plus visualizations
 - `/evaluation` — five-criterion rating interface
 
 ## Required map file

@@ -160,7 +160,7 @@ export function StoryExperience() {
           disabled={isLoading}
           type="submit"
         >
-          {isLoading ? "GENERATING STORY..." : "GENERATE STORY A"}
+          {isLoading ? "GENERATING AGENTIC STORY..." : "GENERATE AGENTIC STORY"}
         </button>
         {generationStatus && (
           <p className="mt-3 text-sm text-slate-400">{generationStatus}</p>
@@ -179,7 +179,7 @@ export function StoryExperience() {
         </div>
       ) : (
         <section className="panel mt-8 p-6 text-center text-sm leading-7 text-slate-400">
-          Generate Story A to see the agentic narrative and its data-backed
+          Generate the agentic story to see its data-backed
           visualizations.
         </section>
       )}
@@ -187,7 +187,7 @@ export function StoryExperience() {
       <section className="mt-5">
         <article className="panel p-6 md:p-8">
           <h2 className="text-center text-sm font-bold uppercase tracking-[.18em] text-[#efbc42]">
-            Story B · Human
+            Human-written story
           </h2>
           <p className="mt-3 text-center text-xs text-slate-500">
             Baseline version: {humanStory.version}
