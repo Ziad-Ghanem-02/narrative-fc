@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from story_pipeline.agents.story_rewriter import StoryRewriter
 from story_pipeline.graph import run_story
+from story_pipeline.human_story_visuals import load_human_story_visuals
 from story_pipeline.story_links import retain_valid_chart_markers
 from story_pipeline.world_cup import load_map_summary
 from stories.models import StoryGeneration, StoryGenerationJob, StoryRevision
@@ -52,6 +53,11 @@ class StoryGenerationView(APIView):
 class WorldCupMapSummaryView(APIView):
     def get(self, request):
         return Response({"countries": load_map_summary()})
+
+
+class HumanStoryVisualsView(APIView):
+    def get(self, request):
+        return Response(load_human_story_visuals())
 
 
 class StoryGenerationJobView(APIView):

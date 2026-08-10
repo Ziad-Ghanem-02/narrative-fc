@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
 import { AgenticStory } from "@/components/AgenticStory";
+import { HumanStory } from "@/components/HumanStory";
 import {
   getLatestStory,
   getStory,
@@ -13,7 +14,6 @@ import {
   queueStoryGeneration,
   reviseStory,
 } from "@/lib/backend-api";
-import { humanStory } from "@/lib/human-story";
 import type { StoryResponse } from "@/lib/story-types";
 
 
@@ -184,21 +184,9 @@ export function StoryExperience() {
         </section>
       )}
 
-      <section className="mt-5">
-        <article className="panel p-6 md:p-8">
-          <h2 className="text-center text-sm font-bold uppercase tracking-[.18em] text-[#efbc42]">
-            Human-written story
-          </h2>
-          <p className="mt-3 text-center text-xs text-slate-500">
-            Baseline version: {humanStory.version}
-          </p>
-          <div className="mt-6 space-y-5 text-sm leading-7 text-slate-200">
-            {humanStory.paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-        </article>
-      </section>
+      <div className="mt-5">
+        <HumanStory />
+      </div>
 
       <div className="mt-10 flex justify-end">
         <Link

@@ -28,7 +28,7 @@ export interface ChartSpec {
   };
   y_axis?: {
     label: string;
-    format: "number" | "percentage";
+    format: "number" | "percentage" | "stage";
   };
   series: ChartSeries[];
   data: Array<Record<string, string | number | null>>;
@@ -67,4 +67,9 @@ export interface StoryRevisionResponse {
 export interface EvaluationResponse {
   id: number;
   created_at: string;
+}
+
+export interface HumanStoryVisualsResponse {
+  queries: Array<{ purpose: string; sql: string }>;
+  charts: ChartSpec[];
 }

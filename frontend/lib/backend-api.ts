@@ -1,5 +1,6 @@
 import type {
   EvaluationResponse,
+  HumanStoryVisualsResponse,
   StoryJobResponse,
   StoryResponse,
   StoryRevisionResponse,
@@ -57,6 +58,10 @@ export function getStory(storyId: string): Promise<StoryResponse> {
 
 export function getLatestStory(): Promise<StoryResponse> {
   return request<StoryResponse>("/stories/latest/");
+}
+
+export function getHumanStoryVisuals(): Promise<HumanStoryVisualsResponse> {
+  return request<HumanStoryVisualsResponse>("/world-cup/human-story-visuals/");
 }
 
 export function reviseStory(

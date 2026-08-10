@@ -68,6 +68,18 @@ class StoryGenerationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["countries"], load_map_summary.return_value)
 
+    @patch("stories.views.load_human_story_visuals")
+    def test_returns_human_story_visuals_from_backend(self, load_human_story_visuals):
+        load_human_story_visuals.return_value = {
+            "queries": [{"purpose": "Tournament participation growth", "sql": "SELECT 1"}],
+            "charts": [{"id": "chart-1", "type": "line", "title": "Participation", "description": "", "x_axis": {"data_key": "year", "label": "Year"}, "y_axis": {"label": "Teams", "format": "number"}, "series": [], "data": []}],
+        }
+
+        response = self.client.get("/api/world-cup/human-story-visuals/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, load_human_story_visuals.return_value)
+
     @patch("story_pipeline.world_cup.run_query_with_columns")
     def test_load_map_summary_returns_json_ready_country_stats(
         self,

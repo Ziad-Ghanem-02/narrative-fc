@@ -56,10 +56,20 @@ const tooltipProps = {
   },
 };
 
-function formatValue(value: string | number, format: "number" | "percentage") {
+function formatValue(value: string | number, format: "number" | "percentage" | "stage") {
   const numericValue = typeof value === "number" ? value : Number(value);
   if (Number.isNaN(numericValue)) {
     return String(value);
+  }
+  if (format === "stage") {
+    return {
+      1: "Group stage",
+      2: "Round of 32",
+      3: "Round of 16",
+      4: "Quarter-finals",
+      5: "Semi-finals",
+      6: "Final",
+    }[numericValue] ?? String(value);
   }
   if (format === "percentage") {
     return `${numericValue.toFixed(1)}%`;
@@ -70,6 +80,10 @@ function formatValue(value: string | number, format: "number" | "percentage") {
 
 export function BackendChart({ chart }: BackendChartProps) {
   const yAxis = chart.y_axis ?? { label: "Value", format: "number" as const };
+  const isStageAxis = yAxis.format === "stage";
+  const isPercentageXAxis =
+    chart.x_axis.data_key === "win_rate" ||
+    chart.x_axis.label.toLowerCase().includes("rate");
   const firstSeries = chart.series[0];
   const axisProps = {
     stroke: "#94a3b8",
@@ -94,9 +108,9 @@ export function BackendChart({ chart }: BackendChartProps) {
       {...axisProps}
       key="y-axis"
       tickFormatter={(value) => formatValue(value, yAxis.format)}
-      width={52}
+      width={isStageAxis ? 96 : 52}
       label={{
-        value: yAxis.label,
+        value: isStageAxis ? "" : yAxis.label,
         fill: "#94a3b8",
         fontSize: 11,
         angle: -90,
@@ -204,14 +218,18 @@ export function BackendChart({ chart }: BackendChartProps) {
 if (chart.type === "scatter" && firstSeries) {
   return (
     <ResponsiveContainer height={320} width="100%">
-      <ScatterChart margin={{ bottom: 16, left: 16, right: 16, top: 8 }}>
+      <ScatterChart margin={{ bottom: 16, left: 0, right: 16, top: 8 }}>
         <CartesianGrid stroke="#18303f" strokeDasharray="3 4" />
         <XAxis
           {...axisProps}
           type="number"
           dataKey={chart.x_axis.data_key}
-          domain={[0, 100]}
-          tickFormatter={(value) => `${Number(value).toFixed(0)}%`}
+          domain={["auto", "auto"]}
+          tickFormatter={(value) =>
+            isPercentageXAxis
+              ? `${Number(value).toFixed(0)}%`
+              : Number(value).toFixed(0)
+          }
           label={{
             value: chart.x_axis.label,
             fill: "#94a3b8",
@@ -224,13 +242,17 @@ if (chart.type === "scatter" && firstSeries) {
           {...axisProps}
           type="number"
           dataKey={firstSeries.data_key}
+          domain={isStageAxis ? [1, 6] : ["auto", "auto"]}
+          ticks={isStageAxis ? [1, 2, 3, 4, 5, 6] : undefined}
           tickFormatter={(value) => formatValue(value, yAxis.format)}
+          width={isStageAxis ? 96 : 52}
           label={{
-            value: yAxis.label,
+            value: isStageAxis ? "" : yAxis.label,
             fill: "#94a3b8",
             fontSize: 10,
             angle: -90,
             position: "insideLeft",
+            offset: 10,
           }}
         />
         <Tooltip
@@ -249,14 +271,26 @@ if (chart.type === "scatter" && firstSeries) {
                 }}
               >
                 <p style={{ ...tooltipProps.labelStyle, margin: "0 0 8px 0", fontWeight: 600 }}>
-                  {String(point.team_name ?? "")}
+                  {point.winning_team
+                    ? `${String(point.winning_team)} defeated ${String(point.losing_team ?? "")}`
+                    : String(point.team_name ?? "")}
                 </p>
                 <p style={{ ...tooltipProps.itemStyle, margin: "4px 0" }}>
-                  {chart.x_axis.label}: {Number(point[chart.x_axis.data_key]).toFixed(1)}%
+                  {chart.x_axis.label}: {String(point[chart.x_axis.data_key] ?? "")}
                 </p>
                 <p style={{ ...tooltipProps.itemStyle, margin: "4px 0" }}>
                   {yAxis.label}: {formatValue(point[firstSeries.data_key] as number, yAxis.format)}
                 </p>
+                {point.score && (
+                  <p style={{ ...tooltipProps.itemStyle, margin: "4px 0" }}>
+                    Score: {String(point.score)}
+                  </p>
+                )}
+                {point.stage_name && (
+                  <p style={{ ...tooltipProps.itemStyle, margin: "4px 0" }}>
+                    Stage: {String(point.stage_name)}
+                  </p>
+                )}
               </div>
             );
           }}
@@ -332,7 +366,7 @@ if (chart.type === "scatter" && firstSeries) {
   if (chart.type === "line") {
     return (
       <ResponsiveContainer height={320} width="100%">
-        <LineChart data={chart.data}>
+        <LineChart data={chart.data} margin={{ right: 8 }}>
           {sharedAxes}
           {chart.series.map((series) => (
             <Line
