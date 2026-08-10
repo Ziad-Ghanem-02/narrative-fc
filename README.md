@@ -139,7 +139,3 @@ DJANGO_SECRET_KEY=a-long-random-secret
 Vercel also provides `VERCEL_URL`; Django automatically adds that hostname to
 `ALLOWED_HOSTS`. Keep `DJANGO_ALLOWED_HOSTS` configured explicitly for the
 production hostname and any custom domain.
-
-## Image Credits
-
-Hero image attribution is documented in [frontend/public/ASSET-CREDITS.md](frontend/public/ASSET-CREDITS.md).
