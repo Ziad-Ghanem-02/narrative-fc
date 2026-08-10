@@ -32,9 +32,8 @@ OPENAI_BASE_URL=https://your-llm-provider.example/v1
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,[::1]
 ```
 
-`DATABASE_URL` must point to PostgreSQL. The backend does not use SQLite or
-`Database/worldcup.db`. Set `DJANGO_ALLOWED_HOSTS` to the comma-separated hostnames
-used by your deployment.
+`DATABASE_URL` must point to PostgreSQL. Set `DJANGO_ALLOWED_HOSTS` to the
+comma-separated hostnames used by your deployment.
 
 ## Install and run
 
