@@ -157,7 +157,7 @@ export function StoryExperience() {
           value={question}
         />
         <button
-          className="gold-button mt-4 px-6 py-3 text-sm disabled:cursor-wait disabled:opacity-60"
+          className="gold-button mt-4 px-6 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isSubmitDisabled}
           type="submit"
         >
