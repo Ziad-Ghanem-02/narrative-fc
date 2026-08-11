@@ -76,6 +76,11 @@ export function StoryExperience() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isGenerating || !question.trim()) {
+      return;
+    }
+
     setIsGenerating(true);
     setError("");
     setGenerationStatus("Queueing story generation...");
@@ -136,6 +141,8 @@ export function StoryExperience() {
     });
   }
 
+  const isSubmitDisabled = true;
+
   return (
     <>
       <form className="panel mt-8 p-5" onSubmit={handleSubmit}>
@@ -151,7 +158,7 @@ export function StoryExperience() {
         />
         <button
           className="gold-button mt-4 px-6 py-3 text-sm disabled:cursor-wait disabled:opacity-60"
-          disabled={isGenerating}
+          disabled={isSubmitDisabled}
           type="submit"
         >
           {isGenerating ? "GENERATING AGENTIC STORY..." : "GENERATE AGENTIC STORY"}
