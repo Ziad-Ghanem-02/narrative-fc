@@ -17,7 +17,6 @@ export default function Stories() {
           <ArrowLeft size={20} />
         </Link>
         <header className="text-center">
-          <p className="section-kicker mt-5">BLIND COMPARISON</p>
           <h1 className="mt-2 text-2xl font-bold uppercase tracking-wide">
             Story Comparison
           </h1>
