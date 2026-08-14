@@ -1,6 +1,11 @@
+import logging
+
 from story_pipeline.database import run_query_with_columns
 from story_pipeline.llm import ask_llm
 from story_pipeline.serialization import to_json_value
+
+logger = logging.getLogger(__name__)
+
 
 class EvidenceBuilder:
 
@@ -9,8 +14,26 @@ class EvidenceBuilder:
         all_results = []
 
         for query in state["queries"]:
-
-            columns, rows = run_query_with_columns(query["sql"])
+            try:
+                columns, rows = run_query_with_columns(query["sql"])
+            except Exception as error:
+                # The data agent generates SQL with an LLM, so a query can be
+                # syntactically or semantically wrong (e.g. referencing a
+                # column omitted from a CTE). Skip the broken query and keep
+                # going so one bad result does not abort the whole pipeline.
+                logger.warning(
+                    "Query failed and was skipped: %s\nSQL: %s",
+                    error,
+                    query["sql"],
+                )
+                all_results.append({
+                    "purpose": query["purpose"],
+                    "sql": query["sql"],
+                    "columns": [],
+                    "data": [],
+                    "error": f"{type(error).__name__}: {error}",
+                })
+                continue
 
             all_results.append({
                 "purpose": query["purpose"],
@@ -120,5 +143,6 @@ The Story Writer will rely entirely on your report.
 """
 
         print("Calling LLM...")
-        return ask_llm(prompt)
+        response = ask_llm(prompt)
         print("LLM returned.")
+        return response

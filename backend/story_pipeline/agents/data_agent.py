@@ -1,7 +1,12 @@
+from story_pipeline.database import validate_query
 from story_pipeline.llm import ask_llm
 
 
 class DataAgent:
+
+    # Maximum number of validate -> repair -> re-validate rounds applied to the
+    # LLM-generated queries before they are handed to the evidence builder.
+    MAX_REPAIR_ROUNDS = 2
 
     def __init__(self, schema):
         self.schema = schema
@@ -11,6 +16,8 @@ class DataAgent:
         queries = self.generate_queries(
             state["question"]
         )
+
+        queries = self.repair_queries(queries)
 
         return {
             "queries": queries
@@ -57,6 +64,130 @@ class DataAgent:
         return queries
 
 
+
+    def repair_queries(self, queries):
+        """Validate every query with EXPLAIN and ask the LLM to fix any that
+        would fail, repeating for up to MAX_REPAIR_ROUNDS rounds.
+
+        This catches mistakes the LLM makes when generating SQL (e.g.
+        referencing a column in ORDER BY that was omitted from a CTE) before
+        they abort the evidence step.
+        """
+        for round_number in range(1, self.MAX_REPAIR_ROUNDS + 1):
+            errors = [validate_query(query["sql"]) for query in queries]
+            failed = [
+                (index, queries[index], errors[index])
+                for index in range(len(queries))
+                if errors[index] is not None
+            ]
+            if not failed:
+                if round_number > 1:
+                    print(f"All queries valid after repair round {round_number - 1}.")
+                return queries
+
+            print(
+                f"Repair round {round_number}/{self.MAX_REPAIR_ROUNDS}: "
+                f"{len(failed)} of {len(queries)} queries failed validation."
+            )
+            fixed_by_index = self.fix_queries(failed)
+            for index, fixed_query in fixed_by_index.items():
+                queries[index] = fixed_query
+
+        # One last check so the final log reflects the post-repair state.
+        remaining = [
+            queries[index]["purpose"]
+            for index in range(len(queries))
+            if validate_query(queries[index]["sql"]) is not None
+        ]
+        if remaining:
+            print(
+                f"{len(remaining)} query/quries still failing after repair; "
+                f"the evidence builder will skip them: {remaining}"
+            )
+        return queries
+
+    def fix_queries(self, failed):
+        """Ask the LLM to repair a batch of failed queries.
+
+        ``failed`` is a list of (index, query, error) tuples. Returns a dict
+        mapping the original index to the repaired query, matched by purpose
+        (falling back to input order). Unmatched queries are left untouched.
+        """
+        blocks = []
+        for index, query, error in failed:
+            blocks.append(
+                f"PURPOSE:\n{query['purpose']}\n\n"
+                f"SQL:\n{query['sql']}\n\n"
+                f"ERROR:\n{error}\n\n###\n"
+            )
+
+        prompt = f"""
+You are a PostgreSQL expert fixing broken SQL queries for a football analytics
+pipeline.
+
+==================================================
+DATABASE SCHEMA
+==================================================
+
+{self.schema}
+
+==================================================
+FAILED QUERIES
+==================================================
+
+The following queries failed when validated against the database. Each one is
+shown with its PURPOSE, the SQL, and the ERROR returned by PostgreSQL.
+
+{"".join(blocks)}
+
+==================================================
+YOUR TASK
+==================================================
+
+Fix each query so it runs without error.
+
+Rules:
+- Keep the SAME PURPOSE and the SAME intended analysis for every query.
+  Do not change what a query measures; only fix the error.
+- Use ONLY columns and tables that exist in the schema above.
+- A very common mistake is referencing a column in ORDER BY, SELECT, or a
+  window function that was NOT included in a CTE's SELECT list (for example
+  using t.year when the CTE only selected tournament_id and tournament_name).
+  Fix this by adding the missing column to the CTE SELECT list.
+- group_standings.advanced is a `bit varying` column; compare it with B'1',
+  never with a boolean or an integer.
+- One read-only SELECT or WITH statement per query. No multiple statements.
+- Return ONLY the corrected queries, in the SAME ORDER they were given, using
+  this exact format with ### between them:
+
+PURPOSE:
+<same purpose>
+
+SQL:
+<fixed sql>
+
+###
+"""
+        print("Calling LLM to repair failed queries...")
+        response = ask_llm(prompt)
+        print("LLM returned repaired queries.")
+
+        response = response.replace("```sql", "").replace("```", "").strip()
+        parsed = self.parse_queries(response)
+
+        # Prefer matching by purpose so a reordered or partial response still
+        # maps correctly; fall back to input order when purposes drift.
+        by_purpose = {
+            q["purpose"].strip().lower(): q for q in parsed
+        }
+        fixed = {}
+        for position, (index, query, _error) in enumerate(failed):
+            key = query["purpose"].strip().lower()
+            if key in by_purpose:
+                fixed[index] = by_purpose[key]
+            elif position < len(parsed):
+                fixed[index] = parsed[position]
+        return fixed
 
     def generate_queries(self, question):
 

@@ -47,3 +47,27 @@ def run_query(query: str) -> list[tuple]:
     """Run one read-only query and return its rows."""
     _, rows = run_query_with_columns(query)
     return rows
+
+
+def validate_query(query: str) -> str | None:
+    """Dry-run a query with EXPLAIN to catch schema/syntax errors without
+    executing it.
+
+    Returns an error message describing why the query would fail, or None when
+    the query is valid. Used by the data agent to self-heal LLM-generated SQL
+    before it reaches the evidence builder.
+    """
+    try:
+        normalized_query = _validate_query(query)
+    except ValueError as error:
+        return str(error)
+
+    try:
+        with psycopg.connect(_database_url()) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SET TRANSACTION READ ONLY")
+                cursor.execute(f"EXPLAIN {normalized_query}")
+                cursor.fetchall()
+    except psycopg.Error as error:
+        return str(error).strip()
+    return None
