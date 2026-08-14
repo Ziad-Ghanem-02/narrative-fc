@@ -151,8 +151,8 @@ export function StoryExperience() {
         />
         <button
           className="gold-button mt-4 px-6 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-          // disabled={isGenerating} // UNCOMMENT THIS LINE AND COMMENT NEXT ONE TO ENABLE SUBMISSIONS
-          disabled={true}
+          disabled={isGenerating} // UNCOMMENT THIS LINE AND COMMENT NEXT ONE TO ENABLE SUBMISSIONS
+          // disabled={true}
           type="submit"
         >
           {isGenerating ? "GENERATING AGENTIC STORY..." : "GENERATE AGENTIC STORY"}

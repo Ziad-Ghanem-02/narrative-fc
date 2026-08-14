@@ -90,8 +90,8 @@ export function AgenticStory({
           />
           <button
             className="gold-button mt-3 px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-60"
-            // disabled={isRewriting || !instruction.trim()} //UNCOMMENT AND COMMENT NEXT LINE TO ENABLE REWRITES
-            disabled={true}
+            disabled={isRewriting || !instruction.trim()} //UNCOMMENT AND COMMENT NEXT LINE TO ENABLE REWRITES
+            // disabled={true}
             type="submit"
           >
             {isRewriting ? "REWRITING STORY..." : "REWRITE STORY TEXT"}
