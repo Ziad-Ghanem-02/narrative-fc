@@ -74,9 +74,9 @@ export function AgenticStory({
         <h2 className="text-center text-sm font-bold uppercase tracking-[.18em] text-[#efbc42]">
           Agentic story
         </h2>
-        <p className="mt-3 text-center text-xs text-slate-500">
+        {/* <p className="mt-3 text-center text-xs text-slate-500">
           Persisted story ID: {storyId}
-        </p>
+        </p> */}
         <form className="mt-5 rounded-xl border border-white/10 bg-white/[.02] p-4" onSubmit={handleRewriteSubmit}>
           <label className="text-xs font-bold uppercase tracking-[.14em] text-slate-400" htmlFor="story-rewrite-instruction">
             Rewrite agentic story
@@ -89,8 +89,9 @@ export function AgenticStory({
             value={instruction}
           />
           <button
-            className="gold-button mt-3 px-4 py-2 text-xs disabled:cursor-wait disabled:opacity-60"
-            disabled={isRewriting || !instruction.trim()}
+            className="gold-button mt-3 px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-60"
+            // disabled={isRewriting || !instruction.trim()} //UNCOMMENT AND COMMENT NEXT LINE TO ENABLE REWRITES
+            disabled={true}
             type="submit"
           >
             {isRewriting ? "REWRITING STORY..." : "REWRITE STORY TEXT"}

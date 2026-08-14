@@ -61,9 +61,9 @@ export function HumanStory() {
         <h2 className="text-center text-sm font-bold uppercase tracking-[.18em] text-[#efbc42]">
           Human-written story
         </h2>
-        <p className="mt-3 text-center text-xs text-slate-500">
+        {/* <p className="mt-3 text-center text-xs text-slate-500">
           Narrative with data references
-        </p>
+        </p> */}
         <div className="mt-6 space-y-5 text-sm leading-7 text-slate-200">
           {humanStory.paragraphs.map((paragraph, index) => (
             <p key={index}>
