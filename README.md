@@ -1,4 +1,4 @@
-# Story-Teller
+# IMLD Data Storytelling - narrative FC
 
 Story-Teller is a full-stack World Cup data storytelling application. It compares an AI-generated **agentic story** with a **human-written story**, supports interactive evidence charts, and collects anonymous reader evaluations.
 
