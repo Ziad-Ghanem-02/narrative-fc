@@ -46,6 +46,29 @@ Create `frontend/.env.local` when the backend is not running at the default addr
 BACKEND_API_URL=http://127.0.0.1:8000
 ```
 
+## Docker
+
+Docker Compose runs the frontend, Django API, and story-generation worker as one
+stack. The database is deliberately not bundled: the app needs the existing
+PostgreSQL database that contains the World Cup source tables as well as its
+application data.
+
+1. Copy `backend/.env.example` to `backend/.env` and fill in the database and
+   LLM credentials. If you already have `backend/.env`, it is used as-is.
+2. From the repository root, run:
+
+   ```powershell
+   docker compose up --build
+   ```
+
+3. Open [http://localhost:3000](http://localhost:3000). Compose applies Django
+   migrations before it starts the API, and starts the worker automatically.
+
+To run in the background, use `docker compose up --build -d`; stop the stack
+with `docker compose down`. The backend is internal to the Compose network, so
+the browser reaches it through the Next.js proxy. To rebuild after source or
+dependency changes, run `docker compose up --build` again.
+
 ## Local Development
 
 Run the backend API:
