@@ -1,4 +1,4 @@
-# Story-Teller
+# IMLD Data Storytelling - narrative FC
 
 A Django REST backend that runs an agentic pipeline to generate data-backed stories
 about FIFA Men's World Cups. The pipeline uses an OpenAI-compatible LLM and reads

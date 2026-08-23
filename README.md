@@ -1,6 +1,7 @@
-# Story-Teller
+# IMLD Data Storytelling - narrative FC
 
-Story-Teller is a full-stack World Cup data storytelling application. It compares an AI-generated **agentic story** with a **human-written story**, supports interactive evidence charts, and collects anonymous reader evaluations.
+
+narrative FC is a full-stack World Cup data storytelling application. It compares an AI-generated **agentic story** with a **human-written story**, supports interactive evidence charts, and collects anonymous reader evaluations.
 
 ## Project Structure
 
@@ -25,8 +26,6 @@ frontend/   Next.js application, story experiences, charts, and evaluations
 - Node.js and npm
 - A hosted Neon PostgreSQL database
 - An OpenAI-compatible API key and base URL
-
-The application uses the hosted database configured by `DATABASE_URL`. It does not use the ignored `backend/Database/worldcup.db` SQLite artifact or any local football database.
 
 ## Environment
 
